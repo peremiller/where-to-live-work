@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Compass — Where to Live &amp; Where to Work</title>
+<meta name="description" content="A personal decision engine that scores where you should live and where you should work, seeded from your own emails, docs, calendar, notes & photos." />
+<meta name="theme-color" content="#0e1117" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%AD%3C/text%3E%3C/svg%3E" />
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b22; --panel2:#1c232d; --line:#2a323d;
+    --txt:#e6edf3; --mut:#8b97a7; --dim:#5d6877;
+    --acc:#4ea1ff; --acc2:#7c5cff; --good:#3fb950; --warn:#d29922; --bad:#f85149;
+    --live:#4ea1ff; --work:#ff9f43;
+    --r:14px; --sh:0 6px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--acc)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 18px 80px}
+  header.top{padding:26px 18px 10px;max-width:1080px;margin:0 auto}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand .logo{font-size:30px}
+  .brand h1{font-size:21px;margin:0;letter-spacing:.2px}
+  .brand .sub{color:var(--mut);font-size:13px;margin-top:2px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 8px;position:sticky;top:0;background:linear-gradient(var(--bg),var(--bg) 70%,transparent);z-index:5;padding:8px 0}
+  .tab{background:var(--panel);border:1px solid var(--line);color:var(--mut);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:13.5px;font-weight:600;transition:.15s;user-select:none}
+  .tab:hover{color:var(--txt);border-color:var(--dim)}
+  .tab.active{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent}
+  .view{display:none;animation:fade .25s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin:14px 0;box-shadow:var(--sh)}
+  .card h2{margin:0 0 4px;font-size:17px}
+  .card h3{margin:0 0 10px;font-size:15px;color:var(--txt)}
+  .muted{color:var(--mut)}
+  .dim{color:var(--dim)}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--mut);margin:2px 4px 2px 0}
+  .grid{display:grid;gap:14px}
+  @media(min-width:760px){.grid.two{grid-template-columns:1fr 1fr}}
+  /* ranked cards */
+  .rank{display:flex;flex-direction:column;gap:0;margin:12px 0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel)}
+  .rank .hd{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer}
+  .rank .num{font-size:22px;font-weight:800;width:34px;text-align:center;color:var(--dim)}
+  .rank.top .num{color:var(--acc)}
+  .rank .nm{flex:1;min-width:0}
+  .rank .nm b{font-size:16px}
+  .rank .nm .sub2{font-size:12.5px;color:var(--mut)}
+  .score{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+  .scoreLbl{font-size:11px;color:var(--dim);text-align:right}
+  .bigbar{height:7px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:8px}
+  .bigbar > i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+  .rank.work .bigbar > i{background:linear-gradient(90deg,#ff9f43,#ffd166)}
+  .rank .bd{display:none;padding:4px 16px 16px;border-top:1px solid var(--line)}
+  .rank.open .bd{display:block}
+  .why{margin:10px 0 6px;color:var(--mut);font-size:13.5px}
+  .crit{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;margin-top:8px}
+  .crit .cl{font-size:12.5px;color:var(--mut)}
+  .crit .cv{font-size:12px;color:var(--dim);text-align:right;font-variant-numeric:tabular-nums}
+  .minibar{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden}
+  .minibar>i{display:block;height:100%;border-radius:99px;background:var(--acc)}
+  .rank.work .minibar>i{background:#ff9f43}
+  /* sliders */
+  .wrow{display:grid;grid-template-columns:140px 1fr 42px;gap:12px;align-items:center;margin:9px 0}
+  .wrow label{font-size:13.5px;color:var(--txt)}
+  .wrow .wv{font-size:13px;color:var(--mut);text-align:right;font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:99px;background:var(--panel2);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--acc);cursor:pointer;border:3px solid var(--panel);box-shadow:0 0 0 1px var(--line)}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:600}
+  .btn:hover{border-color:var(--dim)}
+  .btn.acc{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent;color:#fff}
+  .btn.sm{padding:5px 10px;font-size:12.5px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+  .kpi .b{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:120px}
+  .kpi .b .n{font-size:20px;font-weight:800}
+  .kpi .b .l{font-size:11.5px;color:var(--mut)}
+  .sig{border-left:3px solid var(--acc);padding:4px 0 4px 12px;margin:10px 0}
+  .sig b{color:var(--txt)}
+  .src{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+  .tag{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);color:var(--mut);margin-left:6px;vertical-align:middle}
+  .tag.live{color:var(--live);border-color:#23415f}
+  .tag.work{color:#ff9f43;border-color:#5f4523}
+  details{margin:8px 0}
+  summary{cursor:pointer;color:var(--mut);font-size:13.5px}
+  .note{font-size:12.5px;color:var(--dim);margin-top:6px}
+  .topbanner{background:linear-gradient(135deg,rgba(78,161,255,.12),rgba(124,92,255,.12));border:1px solid #2c3b52}
+  .foot{color:var(--dim);font-size:12px;text-align:center;margin-top:30px}
+  textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px;font:13px/1.5 inherit;resize:vertical}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="logo">🧭</div>
+    <div>
+      <h1>Compass</h1>
+      <div class="sub">Where should you <b style="color:var(--live)">live</b> &amp; where should you <b style="color:#ff9f43">work</b> — scored from your own data</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs" id="tabs"></div>
+
+  <!-- OVERVIEW -->
+  <section class="view active" data-v="overview">
+    <div class="card topbanner">
+      <h2>Your top picks <span class="dim" style="font-weight:400;font-size:13px">— based on current weights</span></h2>
+      <div class="grid two" id="topPicks"></div>
+      <p class="note">These update live as you adjust priorities in the <b>Priorities</b> tab. Tap any place or path below to see the full reasoning.</p>
+    </div>
+
+    <div class="card">
+      <h3>The one-line read</h3>
+      <p class="muted" id="oneLiner"></p>
+      <div class="kpi" id="overviewKpi"></div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <h3>🏠 Where to live — top 3</h3>
+        <div id="miniLive"></div>
+        <button class="btn sm" onclick="go('live')">See all places →</button>
+      </div>
+      <div class="card">
+        <h3>💼 Where to work — top 3</h3>
+        <div id="miniWork"></div>
+        <button class="btn sm" onclick="go('work')">See all paths →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE -->
+  <section class="view" data-v="live">
+    <div class="card">
+      <h2>🏠 Where to live</h2>
+      <p class="muted">Eight candidate bases scored against your priorities. Ranked best-fit first. Tap a card for the criterion breakdown and the reasoning tied to your data.</p>
+      <div class="row"><span class="dim" style="font-size:12px">Weighting profile:</span><span id="liveProfileTag" class="pill"></span><button class="btn sm" onclick="go('priorities')">Adjust priorities</button></div>
+    </div>
+    <div id="liveList"></div>
+  </section>
+
+  <!-- WORK -->
+  <section class="view" data-v="work">
+    <div class="card">
+      <h2>💼 Where to work</h2>
+      <p class="muted">Six realistic career paths scored against what matters to you. These are about <i>mode &amp; place of work</i> — employer, remote vs onsite, founder vs employee.</p>
+      <div class="row"><span class="dim" style="font-size:12px">Weighting profile:</span><span id="workProfileTag" class="pill"></span><button class="btn sm" onclick="go('priorities')">Adjust priorities</button></div>
+    </div>
+    <div id="workList"></div>
+  </section>
+
+  <!-- PRIORITIES -->
+  <section class="view" data-v="priorities">
+    <div class="card">
+      <h2>🎚️ Your priorities</h2>
+      <p class="muted">Drag to tell Compass what matters most. Everything re-ranks instantly. Weights are relative — they don't need to add to 100.</p>
+      <div class="row" style="margin-top:6px">
+        <button class="btn sm" onclick="applyPreset('rooted')">Preset: Stay rooted</button>
+        <button class="btn sm" onclick="applyPreset('ambition')">Preset: Maximize career</button>
+        <button class="btn sm" onclick="applyPreset('balance')">Preset: Balanced</button>
+        <button class="btn sm" onclick="applyPreset('lifestyle')">Preset: Lifestyle first</button>
+        <button class="btn sm" onclick="resetWeights()">Reset to your data-defaults</button>
+      </div>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <h3 style="color:var(--live)">🏠 Living priorities</h3>
+        <div id="liveWeights"></div>
+      </div>
+      <div class="card">
+        <h3 style="color:#ff9f43">💼 Working priorities</h3>
+        <div id="workWeights"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROFILE -->
+  <section class="view" data-v="profile">
+    <div class="card">
+      <h2>🧬 Your profile</h2>
+      <p class="muted">Signals 5 subagents pulled from your Gmail, Google Drive/Docs, Calendar, Slack, Photos and local notes on <span id="builtDate"></span>. This is what seeds the scores. Edit the personal note below to nudge the engine's read of you.</p>
+    </div>
+    <div class="grid two">
+      <div class="card"><div class="src">Identity</div><div id="sigIdentity"></div></div>
+      <div class="card"><div class="src">Career</div><div id="sigCareer"></div></div>
+      <div class="card"><div class="src">Anchors &amp; ties</div><div id="sigAnchors"></div></div>
+      <div class="card"><div class="src">Aspirations</div><div id="sigAspire"></div></div>
+      <div class="card"><div class="src">Lifestyle &amp; place</div><div id="sigPlace"></div></div>
+      <div class="card"><div class="src">Open questions the data couldn't answer</div><div id="sigGaps"></div></div>
+    </div>
+    <div class="card">
+      <h3>Your own words</h3>
+      <p class="note">Anything you add here is yours to keep (stored locally). Use it to correct the data — e.g. "partner is in Cebu", "won't leave PH until 2027", "comp matters more than I let on".</p>
+      <textarea id="userNote" rows="4" placeholder="Add context the engine should know…"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn acc sm" onclick="saveNote()">Save note</button><span id="noteSaved" class="dim" style="font-size:12px"></span></div>
+    </div>
+  </section>
+
+  <!-- DATA -->
+  <section class="view" data-v="data">
+    <div class="card">
+      <h2>🔎 How this was built</h2>
+      <p class="muted">Five subagents ran in parallel, each on one data source, returning only <b>signals</b> (places, work clues, lifestyle) — never raw private content.</p>
+      <div id="sourceList"></div>
+    </div>
+    <div class="card">
+      <h3>How scoring works</h3>
+      <p class="muted">Every candidate is rated 0–100 on each criterion (seeded from your signals). Your priority weights produce a weighted average. Change a weight and the weighted average — and the ranking — moves. No candidate is "objectively" best; the ranking is <i>best fit for what you said matters</i>.</p>
+      <p class="note">Compass is a thinking aid, not an oracle. It makes your trade-offs explicit. The final call is yours.</p>
+    </div>
+    <div class="card">
+      <h3>Your data, your device</h3>
+      <p class="muted">Everything lives in this browser's localStorage. No server, no account. Export your tuned weights &amp; note any time.</p>
+      <div class="row"><button class="btn sm" onclick="exportState()">Export JSON</button><button class="btn sm" onclick="resetAll()">Reset everything</button></div>
+    </div>
+    <div class="foot">Compass · single-file local app · seeded 2026-06 · 🧭</div>
+  </section>
+</div>
+
+<script>
+/* ============================ DATA MODEL ============================ */
+/* Seeded from the 5-subagent sweep of AJ's Gmail, Drive, Calendar, Slack, Photos, notes. */
+
+const BUILT = "2026-06-28";
+
+const PROFILE = {
+  identity:[
+    ["Who","AJ Miller T. Perez · 35 · Las Piñas, Metro Manila 🇵🇭 · Filipino, PHP-default"],
+    ["Base","BF Resort, Las Piñas — confirmed via DTI/Google scholarship form & Metrobank"],
+    ["Timezone","Asia/Manila (UTC+8) — single-timezone working life"],
+  ],
+  career:[
+    ["Now","Software Quality Engineering Associate Manager @ Accenture PH — leads ~20-person QE org since Oct 2021"],
+    ["Track","14+ yrs QA/test across banking, healthcare, e-commerce, energy; interviewer/resource lead"],
+    ["Pivot","Rebranding QA → <b>Technical Program Manager / QA Automation Lead</b>; tailored Anthropic 'TPM, Launches' CV + cover letter on disk"],
+    ["Upskilling","Heavy AI-PM reskilling (Maven cohorts), Python-for-QA, ISTQB Advanced Test Manager, DTI/Google cert 2026"],
+  ],
+  anchors:[
+    ["Family","Recurring Instapay remittances to dependents; weekly family events in Sariaya, Quezon"],
+    ["Community","INC worship fixed weekly (Sun 9:45am / Thu 7:30pm) with large family attendee list — strong tie-to-Manila"],
+    ["Healthcare","Recurring local dermatology; PH financial vehicles (Pag-IBIG)"],
+    ["Money","Cost-conscious, ~₱120K/mo save-target, income scaling toward ₱250–500K/mo by 2028"],
+  ],
+  aspire:[
+    ["Stated","\"Open to relocation\" on CV & cover letter; applying to US/global AI-lab role"],
+    ["Within Manila","Pull toward <b>BGC / Taguig / Makati</b> — morning walks at Greenway, 'be near wealthy areas', 2027 Makati facility goal"],
+    ["Independent","Wants remote-global / freelance / founder income (SPARQ brand, digital products); Follow-the-Sun model"],
+    ["Horizon","Structured 51-goal system across 2026–2028"],
+  ],
+  place:[
+    ["Loves","Beach &amp; island settings — repeat Cebu/Moalboal, Masasa, Zambales trips"],
+    ["Roots literally","Bought <b>land in Palawan</b> — strongest 'settle somewhere coastal' signal"],
+    ["Cool escape","Tagaytay / Silang highland getaways — relief from Manila heat"],
+    ["City affinity","Comfortable in orderly SE-Asian cities (Singapore visited, Japan affinity + studying Japanese)"],
+  ],
+  gaps:[
+    ["Partner's location","Long-distance relationship; 2027 wedding planned — partner's city unknown but could pull the answer hard"],
+    ["Why move","Comp? ceiling? AI-proximity? Stated openness but no decided reason"],
+    ["Real budget","Income targets known; actual monthly expense ledger not in the data"],
+    ["No imminent move","No job offer, visa app, lease or flight found — exploring, not mid-relocation"],
+  ],
+};
+
+const SOURCES = [
+  ["Gmail","Job-alert config (Las Piñas part-time, AU/SG/CA/US), Metrobank remittances, PMI PH, AI-PM Maven cohorts, one Manila condotel booking. No offer/visa/move email."],
+  ["Google Drive / Docs","Goal roadmaps & trackers: 'BGC QA Automation Lead pipeline', Luzon property deal, Makati 2027 facility, Accenture interview kodigo, Metro Manila commute sheet. PHP-domestic planning."],
+  ["Calendar + Slack","UTC+8 only; Accenture (aya.john.m.perez@accenture.com) deep-work blocks; weekly INC worship + family; BGC walks; 90-day QA-upgrade plan. Slack = empty personal sandbox."],
+  ["Photos / Drive trips","Beach/island pattern: Cebu, Moalboal, Masasa, Zambales, Palawan land; Tagaytay highland; Singapore/Vietnam visited; Japan aspirational."],
+  ["Notes + memory","Accenture SQE Assoc. Manager; prolific single-file-webapp builder shipping to Vercel; Anthropic TPM application; 'open to relocation'; SPARQ ventures; 2026–28 goal system."],
+];
+
+/* ---- LIVING candidates ---- */
+const LIVE_CRIT = [
+  ["career","Career &amp; job access"],
+  ["cost","Affordability / cost of living"],
+  ["family","Family &amp; community proximity"],
+  ["climate","Climate &amp; environment"],
+  ["safety","Safety &amp; infrastructure"],
+  ["lifestyle","Lifestyle &amp; amenities"],
+  ["ease","Ease to settle (low friction)"],
+];
+const LIVE = [
+  {id:"laspinas",name:"Las Piñas (stay put)",sub:"Status quo · Metro Manila SW",emoji:"🏡",
+   s:{career:60,cost:85,family:98,climate:60,safety:70,lifestyle:65,ease:100},
+   why:"Zero friction, your whole support system is here — family, INC community, healthcare, remittance flows. The catch is it's a 60–90 min haul from the BGC/Makati jobs you're eyeing, and it's the least ambitious choice for a career on the move."},
+  {id:"bgc",name:"BGC / Taguig",sub:"Your aspirational metro base",emoji:"🌆",
+   s:{career:92,cost:45,family:80,climate:58,safety:90,lifestyle:95,ease:88},
+   why:"This is where your own signals point: morning walks at Greenway, 'be near wealthy areas', the QA-Automation-Lead pipeline, the 2027 Makati facility. Best job access + safety + lifestyle in PH. Cost is the real tax — premium rent eats into the ₱120K/mo savings target."},
+  {id:"makati",name:"Makati / Poblacion",sub:"CBD alternative to BGC",emoji:"🏙️",
+   s:{career:90,cost:48,family:78,climate:56,safety:82,lifestyle:92,ease:88},
+   why:"Nearly interchangeable with BGC for your purposes — slightly more grit and nightlife, marginally cheaper, your 2027 facility goal literally names it. Same career upside, same cost pressure."},
+  {id:"tagaytay",name:"Tagaytay / Silang, Cavite",sub:"Highland, cool, near metro",emoji:"⛰️",
+   s:{career:50,cost:70,family:75,climate:90,safety:78,lifestyle:70,ease:85},
+   why:"The cool-climate escape you keep returning to, close enough to Manila for hybrid days. Great if work goes mostly-remote; weak if you need to be in a BGC office often. A lifestyle hedge, not a career base."},
+  {id:"cebu",name:"Cebu City",sub:"2nd-city beach + tech hub",emoji:"🏝️",
+   s:{career:70,cost:72,family:55,climate:78,safety:75,lifestyle:80,ease:80},
+   why:"Your most-repeated trip destination, with a real BPO/tech scene and beaches an hour away — a genuine 'have it all' compromise. The cost: you'd leave the daily family/INC network in Manila behind."},
+  {id:"palawan",name:"Palawan",sub:"You already bought land here",emoji:"🌴",
+   s:{career:35,cost:75,family:45,climate:95,safety:70,lifestyle:75,ease:70},
+   why:"The strongest 'settle somewhere coastal' signal in your whole dataset — you own land here. Dreamy if your income goes fully remote/founder. Brutal for a corporate QA-lead track: thin job market, far from family and clients."},
+  {id:"singapore",name:"Singapore",sub:"Regional career ceiling",emoji:"🇸🇬",
+   s:{career:95,cost:25,family:50,climate:60,safety:98,lifestyle:90,ease:45},
+   why:"Top-tier comp, safety and SE-Asia career ceiling, 3.5 hrs from family, English-working. But cost is savage and you'd need an Employment Pass (real visa friction). The high-ambition, high-cost play that keeps you in the region."},
+  {id:"nomad",name:"Remote base abroad",sub:"Bangkok / Lisbon-style",emoji:"✈️",
+   s:{career:75,cost:60,family:40,climate:70,safety:80,lifestyle:85,ease:55},
+   why:"If you land the remote-global TPM role, you could base anywhere on a nomad/DTV-style visa and arbitrage cost vs income. Maximal freedom, but it pulls you furthest from family/community — your heaviest anchor."},
+];
+
+/* ---- WORK candidates ---- */
+const WORK_CRIT = [
+  ["comp","Compensation potential"],
+  ["growth","Growth &amp; career ceiling"],
+  ["remote","Remote / location freedom"],
+  ["stability","Stability &amp; low risk"],
+  ["fit","Skill fit today"],
+  ["goal","Alignment w/ your 2026–28 goals"],
+  ["wlb","Work–life balance"],
+];
+const WORK = [
+  {id:"accenture",name:"Stay at Accenture PH",sub:"Keep the SQE Assoc. Manager seat",emoji:"🏢",
+   s:{comp:60,growth:65,remote:70,stability:88,fit:95,goal:55,wlb:60},
+   why:"Safest path — you're already strong here, mostly WFH, steady income to fund the family obligations and side ventures. But it's the slowest route to the comp and TPM identity your goals describe; risk of plateau."},
+  {id:"bgclead",name:"BGC QA-Automation-Lead role",sub:"Level up locally, in-market",emoji:"📈",
+   s:{comp:72,growth:78,remote:50,stability:80,fit:92,goal:70,wlb:58},
+   why:"The promotion your '90-day QA upgrade' plan and goal docs already aim at. Better comp + title without leaving Manila or your network. Trade-off: more on-site, and still QA-flavored rather than the broader TPM leap."},
+  {id:"remotetpm",name:"Remote-global TPM",sub:"US/EU company, work from PH",emoji:"🌍",
+   s:{comp:95,growth:92,remote:95,stability:60,fit:70,goal:95,wlb:70},
+   why:"The bullseye for your stated goals — the Anthropic-style 'TPM, Launches' application is exactly this. Top comp in PHP terms, keeps you near family, AI-industry proximity. Risks: hardest to land, the QA→TPM/ML-research gap you yourself flagged, and timezone strain."},
+  {id:"relocate",name:"Relocate abroad for a tech role",sub:"Onsite in SG / US",emoji:"🛫",
+   s:{comp:92,growth:90,remote:30,stability:65,fit:75,goal:88,wlb:60},
+   why:"Highest absolute comp + global resume, matches 'open to relocation'. But it directly fights your heaviest anchors (family, INC community, remittances) and needs visa sponsorship. Big upside, biggest personal cost."},
+  {id:"founder",name:"Full-time founder",sub:"SPARQ / digital products",emoji:"🚀",
+   s:{comp:50,growth:85,remote:100,stability:35,fit:80,goal:90,wlb:65},
+   why:"Total location freedom and the entrepreneurial identity you keep building toward (40+ apps, niche products). Uncapped upside but the income is unproven — risky while you're supporting dependents. Better as a side engine first."},
+  {id:"freelance",name:"Freelance / contract QA + AI",sub:"Independent, location-free",emoji:"🧩",
+   s:{comp:70,growth:70,remote:100,stability:45,fit:88,goal:80,wlb:75},
+   why:"A bridge between Accenture and founder: bills your strongest skill at global rates, fully remote, best work-life balance. Less stable than employment, but you could base in Cebu or Palawan and still earn. Pairs naturally with the founder path."},
+];
+
+/* ---- default weights (seeded from his profile) ---- */
+const DEFAULTS = {
+  live:{career:20,cost:15,family:20,climate:12,safety:10,lifestyle:13,ease:10},
+  work:{comp:22,growth:20,remote:18,stability:12,fit:10,goal:12,wlb:6},
+};
+const PRESETS = {
+  rooted:{live:{career:14,cost:18,family:30,climate:8,safety:10,lifestyle:8,ease:12},work:{comp:14,growth:12,remote:18,stability:26,fit:18,goal:6,wlb:6}},
+  ambition:{live:{career:32,cost:8,family:8,climate:6,safety:14,lifestyle:14,ease:8},work:{comp:30,growth:28,remote:10,stability:6,fit:8,goal:14,wlb:4}},
+  balance:{live:{career:16,cost:15,family:16,climate:14,safety:13,lifestyle:13,ease:13},work:{comp:16,growth:16,remote:15,stability:14,fit:13,goal:14,wlb:12}},
+  lifestyle:{live:{career:10,cost:14,family:16,climate:26,safety:10,lifestyle:18,ease:6},work:{comp:10,growth:12,remote:24,stability:10,fit:10,goal:12,wlb:22}},
+};
+
+/* ============================ STATE ============================ */
+const LS="compass.v1";
+let state = load();
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(LS));if(s&&s.weights)return s;}catch(e){}
+  return {weights:clone(DEFAULTS), note:"", openLive:{}, openWork:{}};
+}
+function save(){localStorage.setItem(LS,JSON.stringify(state));}
+function clone(o){return JSON.parse(JSON.stringify(o));}
+
+/* ============================ SCORING ============================ */
+function scoreOf(cand, weights){
+  let num=0, den=0;
+  for(const k in weights){const w=weights[k]; num += (cand.s[k]||0)*w; den += w;}
+  return den? num/den : 0;
+}
+function ranked(list, weights){
+  return list.map(c=>({c, sc:scoreOf(c,weights)})).sort((a,b)=>b.sc-a.sc);
+}
+
+/* ============================ RENDER ============================ */
+const TABS=[["overview","Overview"],["live","🏠 Where to live"],["work","💼 Where to work"],["priorities","🎚️ Priorities"],["profile","🧬 Profile"],["data","🔎 Data &amp; method"]];
+function buildTabs(){
+  document.getElementById("tabs").innerHTML = TABS.map(([k,l],i)=>
+    `<div class="tab${i===0?' active':''}" data-t="${k}" onclick="go('${k}')">${l}</div>`).join("");
+}
+function go(k){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.t===k));
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.dataset.v===k));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function rankCardHTML(entry, idx, kind, crit, openMap){
+  const {c,sc}=entry;
+  const isTop = idx===0;
+  const open = openMap[c.id];
+  const critRows = crit.map(([k,lbl])=>{
+    const v=c.s[k]||0;
+    return `<div class="cl">${lbl}</div><div class="minibar"><i style="width:${v}%"></i></div><div class="cv">${v}</div>`;
+  }).join("");
+  return `<div class="rank ${kind==='work'?'work':''} ${isTop?'top':''} ${open?'open':''}" id="rk-${kind}-${c.id}">
+    <div class="hd" onclick="toggle('${kind}','${c.id}')">
+      <div class="num">${idx+1}</div>
+      <div style="font-size:22px">${c.emoji}</div>
+      <div class="nm"><b>${c.name}</b><div class="sub2">${c.sub}</div>
+        <div class="bigbar"><i style="width:${sc}%"></i></div>
+      </div>
+      <div><div class="score">${sc.toFixed(0)}</div><div class="scoreLbl">fit / 100</div></div>
+    </div>
+    <div class="bd">
+      <div class="why">${c.why}</div>
+      <div class="crit">${critRows}</div>
+      <div class="note">Numbers are seeded from your data; the <b>fit</b> score reweights them by your priorities.</div>
+    </div>
+  </div>`;
+}
+function toggle(kind,id){
+  const m = kind==='work'?state.openWork:state.openLive;
+  m[id]=!m[id]; save();
+  document.getElementById(`rk-${kind}-${id}`).classList.toggle("open",m[id]);
+}
+
+function renderLists(){
+  const rl=ranked(LIVE,state.weights.live);
+  const rw=ranked(WORK,state.weights.work);
+  document.getElementById("liveList").innerHTML = rl.map((e,i)=>rankCardHTML(e,i,'live',LIVE_CRIT,state.openLive)).join("");
+  document.getElementById("workList").innerHTML = rw.map((e,i)=>rankCardHTML(e,i,'work',WORK_CRIT,state.openWork)).join("");
+
+  // overview
+  const topL=rl[0], topW=rw[0];
+  document.getElementById("topPicks").innerHTML =
+    pickCard("🏠 Live","var(--live)",topL,"live")+pickCard("💼 Work","#ff9f43",topW,"work");
+  document.getElementById("oneLiner").innerHTML =
+    `On your current priorities, Compass points you to <b style="color:var(--live)">${topL.c.name}</b> as a base and <b style="color:#ff9f43">${topW.c.name}</b> as a path — `+
+    readSynopsis(topL.c.id, topW.c.id);
+  document.getElementById("overviewKpi").innerHTML =
+    `<div class="b"><div class="n">${topL.sc.toFixed(0)}</div><div class="l">Top place fit</div></div>`+
+    `<div class="b"><div class="n">${topW.sc.toFixed(0)}</div><div class="l">Top path fit</div></div>`+
+    `<div class="b"><div class="n">8 / 6</div><div class="l">Places / paths scored</div></div>`+
+    `<div class="b"><div class="n">5</div><div class="l">Data sources mined</div></div>`;
+  document.getElementById("miniLive").innerHTML = rl.slice(0,3).map((e,i)=>miniRow(e,i)).join("");
+  document.getElementById("miniWork").innerHTML = rw.slice(0,3).map((e,i)=>miniRow(e,i,true)).join("");
+
+  document.getElementById("liveProfileTag").textContent = profileName();
+  document.getElementById("workProfileTag").textContent = profileName();
+}
+function pickCard(tag,col,e,kind){
+  return `<div class="card" style="margin:8px 0;border-color:${col}33;cursor:pointer" onclick="go('${kind}')">
+    <div class="src" style="color:${col}">${tag}</div>
+    <div style="font-size:20px;margin:4px 0"><b>${e.c.emoji} ${e.c.name}</b></div>
+    <div class="muted" style="font-size:13px">${e.c.sub}</div>
+    <div class="bigbar" style="margin-top:10px"><i style="width:${e.sc}%;background:${col}"></i></div>
+    <div class="dim" style="font-size:11px;margin-top:4px">${e.sc.toFixed(0)} / 100 fit</div>
+  </div>`;
+}
+function miniRow(e,i,work){
+  return `<div class="row" style="justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line)">
+    <div><b>${i+1}. ${e.c.emoji} ${e.c.name}</b></div>
+    <div class="score" style="font-size:17px;color:${work?'#ff9f43':'var(--live)'}">${e.sc.toFixed(0)}</div></div>`;
+}
+function readSynopsis(liveId, workId){
+  if(workId==="remotetpm" && (liveId==="bgc"||liveId==="makati"||liveId==="laspinas"))
+    return "i.e. land the remote-global role but keep your roots in Metro Manila. The highest-upside move that doesn't cost you your support system.";
+  if(workId==="relocate")
+    return "i.e. you're weighting ambition over anchors — make sure the comp justifies leaving family, community and the Palawan plan behind.";
+  if(liveId==="palawan"||liveId==="cebu")
+    return "i.e. you're leaning into the coastal life your data clearly loves — which only works if the work path is genuinely remote.";
+  if(workId==="accenture"||workId==="bgclead")
+    return "i.e. a low-risk, in-market consolidation — sensible while family obligations are heavy, but watch the plateau.";
+  return "the rest of the trade-offs are in the two tabs.";
+}
+
+/* weights UI */
+function renderWeights(){
+  document.getElementById("liveWeights").innerHTML = LIVE_CRIT.map(([k,l])=>wrow('live',k,l)).join("");
+  document.getElementById("workWeights").innerHTML = WORK_CRIT.map(([k,l])=>wrow('work',k,l)).join("");
+}
+function wrow(kind,k,l){
+  const v=state.weights[kind][k];
+  return `<div class="wrow"><label>${l}</label>
+    <input type="range" min="0" max="40" value="${v}" oninput="setW('${kind}','${k}',this.value)">
+    <div class="wv" id="wv-${kind}-${k}">${v}</div></div>`;
+}
+function setW(kind,k,v){
+  state.weights[kind][k]=+v; document.getElementById(`wv-${kind}-${k}`).textContent=v;
+  save(); renderLists();
+}
+function applyPreset(p){state.weights=clone(PRESETS[p]);save();renderWeights();renderLists();go('priorities');flash("Preset applied");}
+function resetWeights(){state.weights=clone(DEFAULTS);save();renderWeights();renderLists();flash("Reset to your data-defaults");}
+function profileName(){
+  const w=JSON.stringify(state.weights);
+  for(const p in PRESETS){if(JSON.stringify(PRESETS[p])===w)return {rooted:"Stay rooted",ambition:"Maximize career",balance:"Balanced",lifestyle:"Lifestyle first"}[p];}
+  if(w===JSON.stringify(DEFAULTS))return "Your data-defaults";
+  return "Custom";
+}
+
+/* profile + sources */
+function fillSig(id, arr){
+  document.getElementById(id).innerHTML = arr.map(([k,v])=>`<div class="sig"><b>${k}</b> — <span class="muted">${v}</span></div>`).join("");
+}
+function renderProfile(){
+  fillSig("sigIdentity",PROFILE.identity);
+  fillSig("sigCareer",PROFILE.career);
+  fillSig("sigAnchors",PROFILE.anchors);
+  fillSig("sigAspire",PROFILE.aspire);
+  fillSig("sigPlace",PROFILE.place);
+  fillSig("sigGaps",PROFILE.gaps);
+  document.getElementById("builtDate").textContent = BUILT;
+  document.getElementById("userNote").value = state.note||"";
+  document.getElementById("sourceList").innerHTML = SOURCES.map(([s,d])=>
+    `<div class="sig"><b>${s}</b><div class="muted" style="font-size:13px">${d}</div></div>`).join("");
+}
+function saveNote(){state.note=document.getElementById("userNote").value;save();
+  document.getElementById("noteSaved").textContent="Saved ✓";setTimeout(()=>document.getElementById("noteSaved").textContent="",1800);}
+
+function flash(msg){const e=document.createElement("div");e.textContent=msg;
+  e.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;padding:10px 18px;border-radius:99px;font-weight:600;z-index:99;box-shadow:var(--sh)";
+  document.body.appendChild(e);setTimeout(()=>e.remove(),1500);}
+function exportState(){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="compass-state.json";a.click();}
+function resetAll(){if(confirm("Reset all weights and your note?")){localStorage.removeItem(LS);state=load();renderWeights();renderLists();renderProfile();flash("Reset");}}
+
+/* init */
+buildTabs();renderWeights();renderLists();renderProfile();
+</script>
+</body>
+</html>
