@@ -208,6 +208,11 @@
       <div id="sourceList"></div>
     </div>
     <div class="card">
+      <h3>🏗️ Property prices &amp; monthly payments</h3>
+      <p class="muted">Each place-to-live card shows a real, currently-marketed project from a real developer (researched by 5 subagents against 2025–26 listings) — brand, total price, and an estimated monthly amortization.</p>
+      <p class="note">Monthly = standard basis: <b>20% down · 80% financed · 20-year term · 7.0% p.a.</b> (≈₱7,753/mo per ₱1M financed — representative PH bank fix; Pag-IBIG can be lower). The "% of your ₱120k/mo savings" badge shows how heavy the amortization is against your save capacity. Foreign markets (Singapore ABSD 60% / no HDB; Bangkok 49% freehold quota) are flagged and their monthlies are illustrative since foreigners face restricted local financing. All figures are 2026 estimates, not quotes.</p>
+    </div>
+    <div class="card">
       <h3>How scoring works</h3>
       <p class="muted">Every candidate is rated 0–100 on each criterion (seeded from your signals). Your priority weights produce a weighted average. Change a weight and the weighted average — and the ranking — moves. No candidate is "objectively" best; the ranking is <i>best fit for what you said matters</i>.</p>
       <p class="note">Compass is a thinking aid, not an oracle. It makes your trade-offs explicit. The final call is yours.</p>
@@ -310,6 +315,43 @@ const LIVE = [
    why:"If you land the remote-global TPM role, you could base anywhere on a nomad/DTV-style visa and arbitrage cost vs income. Maximal freedom, but it pulls you furthest from family/community — your heaviest anchor."},
 ];
 
+/* ---- REAL ESTATE per living candidate (researched by 5 subagents, 2025–26 listings) ----
+   Financing basis: 20% down, 80% loan, 20-yr term @ 7.0% p.a. (₱7,753/mo per ₱1M financed). */
+const SAVE_CAP = 120000; // AJ's ~₱120k/mo save/invest capacity — affordability anchor
+const REALESTATE = {
+  laspinas:{brand:"Camella (Vista Land)",project:"Camella Del Rio — BF Resort, Las Piñas",type:"2-storey townhouse · ~112 sqm · 4BR",price:"₱8.5M",priceP:8500000,monthly:"₱52.7k/mo",monthlyP:52720,terms:"20% DP · 80% loan · 20-yr @ 7%",note:"House-and-lot ownership in your own backyard — the realistic local stock vs a condo."},
+  bgc:{brand:"Avida Land (Ayala Land)",project:"Avida Towers 34th Street — Uptown BGC",type:"1BR condo · ~36 sqm",price:"₱9.5M",priceP:9500000,monthly:"₱58.9k/mo",monthlyP:58923,terms:"20% DP · 80% loan · 20-yr @ 7%",note:"Walkable, rentable BGC address — 1BR rents ~₱25–40k/mo to offset the amortization."},
+  makati:{brand:"Alveo Land (Ayala Land)",project:"Mergent Residences — Poblacion, Makati",type:"1BR condo · ~46 sqm + parking",price:"₱14.6M",priceP:14600000,monthly:"₱90.6k/mo",monthlyP:90555,terms:"20% DP · 80% loan · 20-yr @ 7%",note:"Premium CBD-fringe 1BR — the priciest Metro-Manila condo on your shortlist."},
+  tagaytay:{brand:"Crown Asia (Vista Land)",project:"Pine Suites Tagaytay",type:"2BR condo · ~48 sqm · ready-for-occupancy",price:"₱4.2M",priceP:4200000,monthly:"₱26.1k/mo",monthlyP:26050,terms:"20% DP · 80% loan · 20-yr @ 7%",note:"Cheapest monthly on the board — highland 2BR that doubles as a weekend/Airbnb unit."},
+  cebu:{brand:"Cebu Landmasters (CLI)",project:"The Wave Towers — Cebu IT Park",type:"1BR condo · 53 sqm + parking · preselling",price:"₱16.5M",priceP:16500000,monthly:"₱102k/mo",monthlyP:102340,terms:"20% DP · 80% loan · 20-yr @ 7% (post-turnover)",note:"Brand-new prime IT Park address; in-house equity is only ~₱14k/mo during construction."},
+  palawan:{brand:"Robinsons Homes (RLC)",project:"Brighton Puerto Princesa",type:"Residential lot · ~180 sqm · titled",price:"₱2.17M",priceP:2170000,monthly:"₱13.5k/mo",monthlyP:13459,terms:"20% DP · 80% loan · 20-yr @ 7% (raw lots often 10-yr → ~₱20k/mo)",note:"Cheapest total price here — own the land now, build later. The Palawan settle play."},
+  singapore:{brand:"OCR private new-launch (UOL/CDL-class)",project:"Representative 1BR — price band",type:"1BR condo · ~40 sqm",price:"~S$1.0M (~₱43M)",priceP:43000000,monthly:"~₱200k/mo",monthlyP:199520,terms:"illustrative — foreigner loans restricted",note:"Plus a flat 60% ABSD (~S$600k) on top, and no HDB access. Effectively a cash-rich/PR play.",flag:"⚠ Foreign-buyer ABSD 60% · local loans restricted"},
+  nomad:{brand:"Sansiri (w/ Mitsui Fudosan)",project:"XT 10 Ekkamai — Bangkok",type:"1BR condo · ~25–30 sqm",price:"฿3.89M (~₱6.2M)",priceP:6224000,monthly:"~₱35.7k/mo",monthlyP:35680,terms:"illustrative — foreigners usually pay cash",note:"Freehold foreign-quota ownership, no punitive stamp duty — about 1/7th a Singapore 1BR.",flag:"✓ Foreign freehold OK (49% quota) · cash-heavy"},
+};
+function affordBand(monthlyP){
+  const pct=Math.round(monthlyP/SAVE_CAP*100);
+  let col="var(--good)",lbl="comfortable";
+  if(pct>75){col="var(--bad)";lbl="heavy";} else if(pct>40){col="var(--warn)";lbl="a stretch";}
+  return {pct,col,lbl};
+}
+function propertyLine(id){const re=REALESTATE[id];if(!re)return"";
+  return `<div style="font-size:12px;color:var(--mut);margin-top:3px">🏗️ ${re.brand.split(' (')[0]} · <b style="color:var(--txt)">${re.price}</b> · ${re.monthly}</div>`;}
+function propertyPanel(id){const re=REALESTATE[id];if(!re)return"";const b=affordBand(re.monthlyP);
+  return `<div style="margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px">
+    <div class="src" style="color:var(--live)">🏗️ Representative property</div>
+    <div style="margin:4px 0 2px"><b>${re.brand}</b></div>
+    <div class="muted" style="font-size:13px">${re.project}</div>
+    <div class="dim" style="font-size:12.5px;margin-top:2px">${re.type}</div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin:12px 0 6px">
+      <div><div class="dim" style="font-size:11px">TOTAL PRICE</div><div style="font-size:20px;font-weight:800">${re.price}</div></div>
+      <div><div class="dim" style="font-size:11px">MONTHLY PAYMENT</div><div style="font-size:20px;font-weight:800;color:var(--live)">${re.monthly}</div></div>
+      <div><div class="dim" style="font-size:11px">VS YOUR ₱120k/mo SAVINGS</div><div style="font-size:20px;font-weight:800;color:${b.col}">${b.pct}% <span style="font-size:12px;font-weight:600">${b.lbl}</span></div></div>
+    </div>
+    <div class="note" style="margin-top:2px">${re.terms}</div>
+    ${re.flag?`<div style="font-size:12px;margin-top:6px;color:${re.flag[0]==='⚠'?'var(--warn)':'var(--good)'}">${re.flag}</div>`:''}
+    <div class="muted" style="font-size:12.5px;margin-top:6px">${re.note}</div>
+  </div>`;}
+
 /* ---- WORK candidates ---- */
 const WORK_CRIT = [
   ["comp","Compensation potential"],
@@ -398,12 +440,14 @@ function rankCardHTML(entry, idx, kind, crit, openMap){
       <div class="num">${idx+1}</div>
       <div style="font-size:22px">${c.emoji}</div>
       <div class="nm"><b>${c.name}</b><div class="sub2">${c.sub}</div>
+        ${kind==='live'?propertyLine(c.id):''}
         <div class="bigbar"><i style="width:${sc}%"></i></div>
       </div>
       <div><div class="score">${sc.toFixed(0)}</div><div class="scoreLbl">fit / 100</div></div>
     </div>
     <div class="bd">
       <div class="why">${c.why}</div>
+      ${kind==='live'?propertyPanel(c.id):''}
       <div class="crit">${critRows}</div>
       <div class="note">Numbers are seeded from your data; the <b>fit</b> score reweights them by your priorities.</div>
     </div>
@@ -446,6 +490,7 @@ function pickCard(tag,col,e,kind){
     <div class="muted" style="font-size:13px">${e.c.sub}</div>
     <div class="bigbar" style="margin-top:10px"><i style="width:${e.sc}%;background:${col}"></i></div>
     <div class="dim" style="font-size:11px;margin-top:4px">${e.sc.toFixed(0)} / 100 fit</div>
+    ${kind==='live'&&REALESTATE[e.c.id]?`<div style="font-size:12px;color:var(--mut);margin-top:6px">🏗️ ${REALESTATE[e.c.id].brand.split(' (')[0]} · <b style="color:var(--txt)">${REALESTATE[e.c.id].price}</b> · ${REALESTATE[e.c.id].monthly}</div>`:''}
   </div>`;
 }
 function miniRow(e,i,work){
