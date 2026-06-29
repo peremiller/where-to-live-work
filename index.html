@@ -147,7 +147,7 @@
   <section class="view" data-v="work">
     <div class="card">
       <h2>💼 Where to work</h2>
-      <p class="muted">Six realistic career paths scored against what matters to you. These are about <i>mode &amp; place of work</i> — employer, remote vs onsite, founder vs employee.</p>
+      <p class="muted">Six realistic career paths scored against what matters to you — employer, remote vs onsite, founder vs employee. Tap a path for real <b>LinkedIn Easy Apply</b> roles (title, company, pay) with one-click apply links.</p>
       <div class="row"><span class="dim" style="font-size:12px">Weighting profile:</span><span id="workProfileTag" class="pill"></span><button class="btn sm" onclick="go('priorities')">Adjust priorities</button></div>
     </div>
     <div id="workList"></div>
@@ -439,6 +439,60 @@ const WORK = [
    why:"A bridge between Accenture and founder: bills your strongest skill at global rates, fully remote, best work-life balance. Less stable than employment, but you could base in Cebu or Palawan and still earn. Pairs naturally with the founder path."},
 ];
 
+/* ---- LINKEDIN EASY APPLY roles per work path (researched by 5 subagents, 2026 listings).
+   easy:true = one-click Easy Apply (f_AL=true); easy:false = routes to an external ATS.
+   url = a durable LinkedIn Easy Apply SEARCH (specific job-ids rotate). */
+const WORKJOBS = {
+  accenture:{cat:"https://www.linkedin.com/jobs/search/?keywords=Quality%20Engineering%20Manager%20OR%20QA%20Manager%20OR%20Test%20Lead&location=Metro%20Manila%2C%20Philippines&f_AL=true",jobs:[
+    {title:"Quality Engineering Associate Manager",company:"Accenture Philippines",loc:"Manila · Hybrid",pay:"₱90–140k/mo",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Quality%20Engineering%20Associate%20Manager&location=Metro%20Manila%2C%20Philippines&f_AL=true",note:"Your exact level — lateral move, same band, keeps the QE manager track."},
+    {title:"QA Manager / Test Delivery Lead",company:"Cognizant",loc:"Taguig · Hybrid",pay:"₱110–160k/mo",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=QA%20Manager%20Test%20Delivery%20Lead&location=Metro%20Manila%2C%20Philippines&f_AL=true",note:"Same big-IT-services world; people-mgmt + test strategy you already do."},
+    {title:"SQE / Test Lead (Quality Engineering)",company:"Finastra",loc:"Taguig (McKinley) · Hybrid",pay:"₱80–130k/mo",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=SQE%20Test%20Lead%20Quality%20Engineering&location=Metro%20Manila%2C%20Philippines&f_AL=true",note:"Product-company (fintech) QA leadership — a step toward TPM with domain ownership."}]},
+  bgclead:{cat:"https://www.linkedin.com/jobs/search/?keywords=QA%20Automation%20Lead%20OR%20Test%20Automation%20Lead%20OR%20SDET%20Lead&location=Taguig%2C%20Metro%20Manila%2C%20Philippines&f_AL=true",jobs:[
+    {title:"Lead SDET",company:"Viventis (BGC client)",loc:"BGC · Hybrid",pay:"₱120–180k/mo",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Lead%20SDET&location=Taguig%2C%20Metro%20Manila%2C%20Philippines&f_AL=true",note:"Direct level-up to Lead SDET; automation-leadership stretch from your QA base."},
+    {title:"QA Automation Lead / SDET",company:"Capgemini",loc:"BGC · Hybrid",pay:"₱100–150k/mo",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=QA%20Automation%20Lead%20SDET&location=Taguig%2C%20Metro%20Manila%2C%20Philippines&f_AL=true",note:"Enterprise SDET; CI/CD quality gates + framework ownership feed the TPM pivot."},
+    {title:"Test Automation Lead (Playwright/Appium)",company:"NCS Philippines",loc:"BGC · Hybrid",pay:"₱95–145k/mo",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Test%20Automation%20Lead%20Playwright&location=Taguig%2C%20Metro%20Manila%2C%20Philippines&f_AL=true",note:"Modern stack (Playwright/Appium/CI-CD) builds the automation-lead credential."}]},
+  remotetpm:{cat:"https://www.linkedin.com/jobs/search/?keywords=Technical%20Program%20Manager&f_AL=true&f_WT=2",jobs:[
+    {title:"Technical Program Manager (Platform)",company:"Zapier",loc:"Remote · Global",pay:"$150–200k",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Technical%20Program%20Manager&f_AL=true&f_WT=2",note:"True work-from-anywhere; async rigor maps to your SQE quality-gate background."},
+    {title:"Senior TPM, R&D PMO",company:"GitLab",loc:"Remote · NA/EMEA",pay:"$170–242k",easy:false,url:"https://www.linkedin.com/jobs/search/?keywords=Senior%20Technical%20Program%20Manager&f_AL=true&f_WT=2",note:"All-remote; PMO program ownership ≈ a 1:1 lift. Many roles route via Greenhouse — verify per listing."},
+    {title:"Program Manager (Launches)",company:"Automattic",loc:"Remote · Global",pay:"$90–200k+",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Program%20Manager%20Launches&f_AL=true&f_WT=2",note:"Distributed-first, equal pay anywhere; a rung below TPM to build launch cred."},
+    {title:"TPM, Compute / API Platform",company:"Anthropic",loc:"Remote-friendly · US-primary",pay:"$200–300k+",easy:false,url:"https://www.linkedin.com/jobs/search/?keywords=AI%20Technical%20Program%20Manager&f_AL=true&f_WT=2",note:"The AI-lab stretch (your application target). Office-first + Greenhouse ATS — aspirational, not one-click."}]},
+  relocate:{cat:"https://www.linkedin.com/jobs/search/?keywords=QA%20Manager%20OR%20Test%20Automation%20Lead%20OR%20Technical%20Program%20Manager&location=Singapore&f_AL=true",jobs:[
+    {title:"Quality Engineering Manager / QA Lead",company:"Grab",loc:"Singapore · Onsite/Hybrid",pay:"S$130–185k/yr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=QA%20Manager&location=Singapore&f_AL=true",note:"Direct QA→leadership fit; Grab routinely sponsors an Employment Pass."},
+    {title:"Technical Program Manager",company:"ByteDance / TikTok",loc:"Singapore · Hybrid",pay:"S$140–230k/yr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Technical%20Program%20Manager&location=Singapore&f_AL=true",note:"Large SG eng hub, active EP sponsor; high-volume hiring — very realistic."},
+    {title:"Test Automation Lead / SDET Lead",company:"Infosys (DBS/GovTech vendor)",loc:"Singapore · Onsite",pay:"S$90–150k/yr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Test%20Automation%20Lead&location=Singapore&f_AL=true",note:"Closest to your automation depth; IT-services firms are the most reliable EP sponsors."},
+    {title:"TPM / QA Lead",company:"Atlassian / Canva",loc:"Sydney, AU · Hybrid",pay:"A$140–220k/yr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Technical%20Program%20Manager&location=Sydney%2C%20Australia&f_AL=true",note:"Confirmed Subclass 482 sponsors; you clear the 2-yr bar. A strong AU backup to SG."}]},
+  founder:{cat:"https://www.linkedin.com/jobs/search/?keywords=Entrepreneur%20in%20Residence%20OR%20Founder%20in%20Residence%20OR%20Founding&f_AL=true&f_TPR=r604800",jobs:[
+    {title:"Founder in Residence",company:"Antler",loc:"Remote intake + residency",pay:"Equity · pre-seed",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Founder%20in%20Residence&f_AL=true",note:"Day-zero build-a-company track; pairs you with co-founders + capital vs bootstrapping SPARQ alone."},
+    {title:"Entrepreneur in Residence (Future CEO)",company:"FutureSight",loc:"Remote",pay:"Co-founder equity",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Entrepreneur%20in%20Residence&f_AL=true&f_WT=2",note:"AI venture studio hands you a validated B2B idea + infra; suits your 0→1 cadence."},
+    {title:"Founding Engineer / Founding PM",company:"YC-backed / stealth startups",loc:"Remote",pay:"$150–220k + equity",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Founding%20Engineer&f_AL=true&f_WT=2",note:"Closest paid-while-you-found path; hands-on ownership + equity, lower risk than going solo."}]},
+  freelance:{cat:"https://www.linkedin.com/jobs/search/?keywords=Contract%20QA%20Automation%20OR%20SDET%20OR%20AI%20Test%20Engineer&f_AL=true&f_WT=2&f_JT=C",jobs:[
+    {title:"Contract QA Automation Engineer",company:"TEKsystems",loc:"Remote · Contract",pay:"$45–65/hr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Contract%20QA%20Automation%20Engineer&f_AL=true&f_WT=2&f_JT=C",note:"Direct fit for your SQE/test-automation core; high volume of remote contract reqs."},
+    {title:"SDET (Contract) — API/UI Framework",company:"Robert Half",loc:"Remote · Contract",pay:"$50–70/hr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=SDET%20Contract&f_AL=true&f_WT=2&f_JT=C",note:"Senior SDET framework work — matches your Associate-Manager-level depth."},
+    {title:"Software Engineer — LLM Evaluation",company:"Mercor",loc:"Remote · Contract",pay:"$50–100/hr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=LLM%20Evaluation%20Engineer&f_AL=true&f_WT=2&f_JT=C",note:"Your Python-for-QA + AI workflows map cleanly to eval guidelines; async 10–40 hrs/wk."},
+    {title:"Freelance QA / Test Automation Consultant",company:"Toptal",loc:"Remote · Contract",pay:"$60–200+/hr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=QA%20Consultant%20Test%20Automation&f_AL=true&f_WT=2&f_JT=C",note:"Premium network; your profile clears the senior bar, and you set your own rate."}]},
+};
+function jobsLine(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
+  const uniq=[...new Set(d.jobs.map(j=>j.company.split(' (')[0].split(' / ')[0]))];
+  return `<div style="font-size:12px;color:var(--mut);margin-top:3px">💼 ${d.jobs.length} roles · ${uniq.slice(0,3).join(' · ')}${uniq.length>3?' +'+(uniq.length-3):''}</div>`;}
+function jobsPanel(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
+  const rows=d.jobs.map(j=>{
+    const tag=j.easy?`<span style="color:var(--good)">Easy Apply ↗</span>`:`<span style="color:var(--warn)">External ATS ↗</span>`;
+    return `<div style="border-top:1px solid var(--line);padding:9px 0">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+        <div style="min-width:0"><b>${j.title}</b> <span class="muted" style="font-size:12.5px">@ ${j.company}</span>
+          <div class="dim" style="font-size:12px;margin-top:1px">${j.loc}</div></div>
+        <div style="text-align:right;white-space:nowrap"><div style="font-size:14px;font-weight:800">${j.pay}</div>
+          <a href="${j.url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;text-decoration:none">${tag}</a></div>
+      </div>
+      <div class="muted" style="font-size:12px;margin-top:4px">${j.note}</div>
+    </div>`;}).join("");
+  return `<div style="margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px 14px 12px">
+    <div class="src" style="color:#ff9f43;padding-top:8px">💼 ${d.jobs.length} LinkedIn roles · title · pay · apply</div>
+    ${rows}
+    <a href="${d.cat}" target="_blank" rel="noopener" class="btn sm" style="display:inline-block;margin-top:10px;text-decoration:none">See all on LinkedIn ↗</a>
+    <div class="note" style="margin-top:8px">Links open a LinkedIn Easy Apply search (f_AL=true) for the role — specific postings rotate. Pay = 2026 estimates. “External ATS” = applies off-LinkedIn (e.g. Greenhouse).</div>
+  </div>`;}
+
 /* ---- default weights (seeded from his profile) ---- */
 const DEFAULTS = {
   live:{career:20,cost:15,family:20,climate:12,safety:10,lifestyle:13,ease:10},
@@ -496,14 +550,14 @@ function rankCardHTML(entry, idx, kind, crit, openMap){
       <div class="num">${idx+1}</div>
       <div style="font-size:22px">${c.emoji}</div>
       <div class="nm"><b>${c.name}</b><div class="sub2">${c.sub}</div>
-        ${kind==='live'?propertyLine(c.id):''}
+        ${kind==='live'?propertyLine(c.id):''}${kind==='work'?jobsLine(c.id):''}
         <div class="bigbar"><i style="width:${sc}%"></i></div>
       </div>
       <div><div class="score">${sc.toFixed(0)}</div><div class="scoreLbl">fit / 100</div></div>
     </div>
     <div class="bd">
       <div class="why">${c.why}</div>
-      ${kind==='live'?propertyPanel(c.id):''}
+      ${kind==='live'?propertyPanel(c.id):''}${kind==='work'?jobsPanel(c.id):''}
       <div class="crit">${critRows}</div>
       <div class="note">Numbers are seeded from your data; the <b>fit</b> score reweights them by your priorities.</div>
     </div>
@@ -546,7 +600,7 @@ function pickCard(tag,col,e,kind){
     <div class="muted" style="font-size:13px">${e.c.sub}</div>
     <div class="bigbar" style="margin-top:10px"><i style="width:${e.sc}%;background:${col}"></i></div>
     <div class="dim" style="font-size:11px;margin-top:4px">${e.sc.toFixed(0)} / 100 fit</div>
-    ${kind==='live'?propertyLine(e.c.id):''}
+    ${kind==='live'?propertyLine(e.c.id):(kind==='work'?jobsLine(e.c.id):'')}
   </div>`;
 }
 function miniRow(e,i,work){
