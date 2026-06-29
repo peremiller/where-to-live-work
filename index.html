@@ -137,7 +137,7 @@
   <section class="view" data-v="live">
     <div class="card">
       <h2>🏠 Where to live</h2>
-      <p class="muted">Eight candidate bases scored against your priorities. Ranked best-fit first. Tap a card for the criterion breakdown and the reasoning tied to your data.</p>
+      <p class="muted">Eleven candidate bases scored against your priorities — Metro Manila, the provinces, the new growth estates (LIMA, New Clark City, Subic), and abroad. Ranked best-fit first. Tap a card for the property options, criterion breakdown, and reasoning.</p>
       <div class="row"><span class="dim" style="font-size:12px">Weighting profile:</span><span id="liveProfileTag" class="pill"></span><button class="btn sm" onclick="go('priorities')">Adjust priorities</button></div>
     </div>
     <div id="liveList"></div>
@@ -209,7 +209,7 @@
     </div>
     <div class="card">
       <h3>🏗️ Property prices &amp; monthly payments</h3>
-      <p class="muted">Each place-to-live card shows a real, currently-marketed project from a real developer (researched by 5 subagents against 2025–26 listings) — brand, total price, and an estimated monthly amortization.</p>
+      <p class="muted">Each place-to-live card lists <b>multiple</b> real, currently-marketed projects from real developers (researched by 5 subagents against 2025–26 listings) — brand, total price, and an estimated monthly amortization, spanning budget → premium per area, including the new growth estates (LIMA, New Clark City, Subic).</p>
       <p class="note">Monthly = standard basis: <b>20% down · 80% financed · 20-year term · 7.0% p.a.</b> (≈₱7,753/mo per ₱1M financed — representative PH bank fix; Pag-IBIG can be lower). The "% of your ₱120k/mo savings" badge shows how heavy the amortization is against your save capacity. Foreign markets (Singapore ABSD 60% / no HDB; Bangkok 49% freehold quota) are flagged and their monthlies are illustrative since foreigners face restricted local financing. All figures are 2026 estimates, not quotes.</p>
     </div>
     <div class="card">
@@ -313,20 +313,64 @@ const LIVE = [
   {id:"nomad",name:"Remote base abroad",sub:"Bangkok / Lisbon-style",emoji:"✈️",
    s:{career:75,cost:60,family:40,climate:70,safety:80,lifestyle:85,ease:55},
    why:"If you land the remote-global TPM role, you could base anywhere on a nomad/DTV-style visa and arbitrage cost vs income. Maximal freedom, but it pulls you furthest from family/community — your heaviest anchor."},
+  {id:"lima",name:"LIMA Estate, Batangas",sub:"Aboitiz township · ~1.5–2 hr south",emoji:"🏘️",
+   s:{career:60,cost:80,family:62,climate:74,safety:82,lifestyle:72,ease:76},
+   why:"Aboitiz's master-planned LIMA estate gives you secure, affordable house-and-lot in cooler Batangas air, weekend-reachable from your Las Piñas family, with Batangas beaches close. Light on your QA/TPM job market, so it leans on remote work."},
+  {id:"newclark",name:"New Clark City, Tarlac",sub:"BCDA's built-from-scratch city · ~2–2.5 hr N",emoji:"🌿",
+   s:{career:55,cost:82,family:44,climate:64,safety:88,lifestyle:58,ease:62},
+   why:"The country's disaster-resilient, green-by-design government city — it fits your disaster-watch instincts and is the cheapest, safest-by-design entry on the board. But it's a 2–2.5 hr frontier far from family, amenities are still thin, and private tech work is scarce. A long-horizon bet."},
+  {id:"subic",name:"Subic Bay, Zambales",sub:"Freeport + beaches · ~2.5 hr NW",emoji:"⚓",
+   s:{career:62,cost:74,family:50,climate:80,safety:84,lifestyle:82,ease:70},
+   why:"Scratches your beach itch closest to Manila — a managed freeport with bays, marina and duty-free living, strong on climate, lifestyle and safety. The catch: inside the freeport you can only lease (no title); freehold ownership sits in Subic town just outside."},
 ];
 
 /* ---- REAL ESTATE per living candidate (researched by 5 subagents, 2025–26 listings) ----
    Financing basis: 20% down, 80% loan, 20-yr term @ 7.0% p.a. (₱7,753/mo per ₱1M financed). */
 const SAVE_CAP = 120000; // AJ's ~₱120k/mo save/invest capacity — affordability anchor
+/* Each area now holds an ARRAY of real properties (researched by 5 subagents, 2025–26 listings). */
 const REALESTATE = {
-  laspinas:{brand:"Camella (Vista Land)",project:"Camella Del Rio — BF Resort, Las Piñas",type:"2-storey townhouse · ~112 sqm · 4BR",price:"₱8.5M",priceP:8500000,monthly:"₱52.7k/mo",monthlyP:52720,terms:"20% DP · 80% loan · 20-yr @ 7%",note:"House-and-lot ownership in your own backyard — the realistic local stock vs a condo."},
-  bgc:{brand:"Avida Land (Ayala Land)",project:"Avida Towers 34th Street — Uptown BGC",type:"1BR condo · ~36 sqm",price:"₱9.5M",priceP:9500000,monthly:"₱58.9k/mo",monthlyP:58923,terms:"20% DP · 80% loan · 20-yr @ 7%",note:"Walkable, rentable BGC address — 1BR rents ~₱25–40k/mo to offset the amortization."},
-  makati:{brand:"Alveo Land (Ayala Land)",project:"Mergent Residences — Poblacion, Makati",type:"1BR condo · ~46 sqm + parking",price:"₱14.6M",priceP:14600000,monthly:"₱90.6k/mo",monthlyP:90555,terms:"20% DP · 80% loan · 20-yr @ 7%",note:"Premium CBD-fringe 1BR — the priciest Metro-Manila condo on your shortlist."},
-  tagaytay:{brand:"Crown Asia (Vista Land)",project:"Pine Suites Tagaytay",type:"2BR condo · ~48 sqm · ready-for-occupancy",price:"₱4.2M",priceP:4200000,monthly:"₱26.1k/mo",monthlyP:26050,terms:"20% DP · 80% loan · 20-yr @ 7%",note:"Cheapest monthly on the board — highland 2BR that doubles as a weekend/Airbnb unit."},
-  cebu:{brand:"Cebu Landmasters (CLI)",project:"The Wave Towers — Cebu IT Park",type:"1BR condo · 53 sqm + parking · preselling",price:"₱16.5M",priceP:16500000,monthly:"₱102k/mo",monthlyP:102340,terms:"20% DP · 80% loan · 20-yr @ 7% (post-turnover)",note:"Brand-new prime IT Park address; in-house equity is only ~₱14k/mo during construction."},
-  palawan:{brand:"Robinsons Homes (RLC)",project:"Brighton Puerto Princesa",type:"Residential lot · ~180 sqm · titled",price:"₱2.17M",priceP:2170000,monthly:"₱13.5k/mo",monthlyP:13459,terms:"20% DP · 80% loan · 20-yr @ 7% (raw lots often 10-yr → ~₱20k/mo)",note:"Cheapest total price here — own the land now, build later. The Palawan settle play."},
-  singapore:{brand:"OCR private new-launch (UOL/CDL-class)",project:"Representative 1BR — price band",type:"1BR condo · ~40 sqm",price:"~S$1.0M (~₱43M)",priceP:43000000,monthly:"~₱200k/mo",monthlyP:199520,terms:"illustrative — foreigner loans restricted",note:"Plus a flat 60% ABSD (~S$600k) on top, and no HDB access. Effectively a cash-rich/PR play.",flag:"⚠ Foreign-buyer ABSD 60% · local loans restricted"},
-  nomad:{brand:"Sansiri (w/ Mitsui Fudosan)",project:"XT 10 Ekkamai — Bangkok",type:"1BR condo · ~25–30 sqm",price:"฿3.89M (~₱6.2M)",priceP:6224000,monthly:"~₱35.7k/mo",monthlyP:35680,terms:"illustrative — foreigners usually pay cash",note:"Freehold foreign-quota ownership, no punitive stamp duty — about 1/7th a Singapore 1BR.",flag:"✓ Foreign freehold OK (49% quota) · cash-heavy"},
+  laspinas:[
+    {brand:"SMDC",project:"South Residences (beside SM Southmall)",type:"Studio · ~21–24 sqm",price:"₱2.9M",priceP:2900000,monthly:"₱18.0k/mo",monthlyP:17985,note:"Entry-level / first solo buyer right by SM Southmall transit."},
+    {brand:"DMCI Homes",project:"Sonora Garden Residences",type:"1BR · ~36 sqm · resort-style",price:"₱6.5M",priceP:6500000,monthly:"₱40.3k/mo",monthlyP:40316,note:"Couple or young family wanting low-density resort amenities."},
+    {brand:"Camella (Vista Land)",project:"BF Resort house-and-lot (Merida)",type:"House-and-lot · 4BR · 93/99 sqm",price:"₱5.5M",priceP:5500000,monthly:"₱34.1k/mo",monthlyP:34113,note:"Land + your own roof in the established BF Resort enclave."}],
+  bgc:[
+    {brand:"SMDC / Federal Land",project:"BGC-fringe RFO studio — indicative band",type:"Studio · ~22–28 sqm",price:"₱4.5M",priceP:4500000,monthly:"₱27.9k/mo",monthlyP:27911,note:"Lowest BGC entry; single pro prioritizing location (price band, not a named tower)."},
+    {brand:"Avida Land (Ayala Land)",project:"Avida Towers 34th Street — Uptown BGC",type:"1BR · ~36 sqm",price:"₱9.5M",priceP:9500000,monthly:"₱58.9k/mo",monthlyP:58923,note:"Walkable, rentable BGC address — 1BR rents ~₱25–40k/mo to offset."},
+    {brand:"Megaworld",project:"Uptown Modern — 9th Ave, BGC",type:"1BR · 58.5 sqm · premium",price:"₱26M",priceP:26000000,monthly:"₱161k/mo",monthlyP:161262,note:"Premium 1BR for an executive end-user or prime-CBD investor."}],
+  makati:[
+    {brand:"Alveo Land (Ayala Land)",project:"Lerato Tower 2 — Malugay",type:"Studio · ~30 sqm · RFO",price:"₱5.5M",priceP:5500000,monthly:"₱34.1k/mo",monthlyP:34113,note:"Entry RFO studio on the Makati CBD fringe."},
+    {brand:"Avida (Ayala Land)",project:"Avida Towers Makati Southpoint",type:"Studio · preselling · no-DP promo",price:"₱6.4M",priceP:6400000,monthly:"₱39.7k/mo",monthlyP:39695,note:"New-build CBD-edge inventory on flexible terms."},
+    {brand:"Century Properties",project:"Trump Tower Makati — Poblacion",type:"1BR · 94.6 sqm · premium",price:"₱17.1M",priceP:17100000,monthly:"₱106k/mo",monthlyP:106061,note:"Large premium 1BR for an executive or high-end landlord."}],
+  tagaytay:[
+    {brand:"SMDC",project:"Wind Residences — Tagaytay",type:"Studio · ~26.6 sqm · Taal view",price:"₱4.27M",priceP:4270000,monthly:"₱26.5k/mo",monthlyP:26484,note:"Affordable highland condo with Taal views; weekend/Airbnb play."},
+    {brand:"SMDC",project:"Wind Residences — Tagaytay",type:"1BR · ~34.5 sqm · balcony",price:"₱5.5M",priceP:5500000,monthly:"₱34.1k/mo",monthlyP:34113,note:"Mid-tier 1BR in a country-club-amenity tower; small-family second home."},
+    {brand:"Camella (Vista Land)",project:"Camella Silang (near Tagaytay)",type:"House-and-lot · entry band",price:"₱6.5M",priceP:6500000,monthly:"₱40.3k/mo",monthlyP:40316,note:"Highland house-and-lot in Silang — land + structure over a condo (entry band)."}],
+  cebu:[
+    {brand:"Taft Properties / AppleOne",project:"Calyx Centre — Cebu IT Park",type:"Studio · ~27 sqm · furnished RFO",price:"₱4.2M",priceP:4200000,monthly:"₱26.1k/mo",monthlyP:26050,note:"Turnkey IT Park rental or starter unit."},
+    {brand:"Taft Properties / AppleOne",project:"38 Park Avenue — Cebu IT Park",type:"1BR · ~55 sqm · furnished + parking",price:"₱13M",priceP:13000000,monthly:"₱80.6k/mo",monthlyP:80630,note:"Prime, walk-to-office IT Park address for a mid-market pro/couple."},
+    {brand:"AboitizLand",project:"Priveya Hills — Talamban",type:"House-and-lot · 3BR · ~180/210 sqm",price:"₱15M",priceP:15000000,monthly:"₱93.0k/mo",monthlyP:93040,note:"Space + a gated upland community a short drive from the core."}],
+  palawan:[
+    {brand:"Camella (Vista Land)",project:"Camella Palawan — Sicsican, Puerto Princesa",type:"Residential lot · 88 sqm",price:"₱2.38M",priceP:2376000,monthly:"₱21.0k/mo",monthlyP:20950,note:"Budget land-banking in a master-planned subdivision (lot, ~10-yr terms)."},
+    {brand:"Camella (Vista Land)",project:"Camella Palawan — Dana model",type:"House-and-lot · 4BR · 110/85 sqm",price:"₱7.43M",priceP:7432800,monthly:"₱46.1k/mo",monthlyP:46100,note:"Brand-new turnkey home near the city for a relocating family."},
+    {brand:"Local stock (band)",project:"Puerto Princesa city condo/townhouse — band",type:"1BR / townhouse · ~30–40 sqm",price:"₱3.5M",priceP:3500000,monthly:"₱21.7k/mo",monthlyP:21710,note:"Lock-and-leave city base; Palawan has almost no branded condo towers (indicative band)."}],
+  lima:[
+    {brand:"AboitizLand",project:"The Villages at Lipa — Brooke Village (in LIMA Estate)",type:"Residential lot · 140 sqm",price:"₱1.67M",priceP:1673700,monthly:"₱10.4k/mo",monthlyP:10381,note:"Entry land-banking inside LIMA Estate — build later.",flag:"✓ Inside LIMA Estate"},
+    {brand:"AboitizLand",project:"The Villages at Lipa — Sierra Village (in LIMA Estate)",type:"House-and-lot · 4BR · 119 sqm",price:"₱5.9M",priceP:5897000,monthly:"₱36.6k/mo",monthlyP:36576,note:"Move-in family house-and-lot for upper-mid buyers, inside the estate.",flag:"✓ Inside LIMA Estate"},
+    {brand:"Torre Lorenzo",project:"Tierra Lorenzo Lipa",type:"Studio condo · ~32 sqm",price:"₱4.5M",priceP:4505000,monthly:"₱27.9k/mo",monthlyP:27942,note:"Condo alternative for singles/investors — in Lipa City, near (not inside) the estate.",flag:"ⓘ Near LIMA Estate (Lipa City)"}],
+  newclark:[
+    {brand:"BCDA — New Clark City",project:"The Residences at New Clark City",type:"2BR condo · ~42 sqm · RFO",price:"₱2.5M",priceP:2500000,monthly:"₱15.5k/mo",monthlyP:15506,note:"The only real condo stock actually inside NCC.",flag:"⚠ Inside NCC · leasehold to 2069 (no freehold)"},
+    {brand:"Camella (Vista Land)",project:"Camella Capas, Tarlac",type:"House-and-lot · entry model",price:"₱2.3M",priceP:2300000,monthly:"₱14.3k/mo",monthlyP:14266,note:"Affordable family house-and-lot, ~15 min from NCC.",flag:"ⓘ Nearest available · ~15 min from NCC"},
+    {brand:"Megaworld",project:"Capital Town — Montrose Parkview",type:"Studio/1BR · township",price:"₱4.5M",priceP:4500000,monthly:"₱27.9k/mo",monthlyP:27911,note:"Premium township condo in the greater Clark corridor (San Fernando, Pampanga).",flag:"ⓘ Nearest available · greater Clark corridor"}],
+  subic:[
+    {brand:"SBMA leasehold",project:"Kalayaan/Binictican ex-US-base housing",type:"3–4BR house · ~150–200 sqm · lease",price:"Leasehold",priceP:0,monthly:"₱60k/mo lease",monthlyP:60000,note:"Inside-freeport expat/retiree pick — you LEASE from SBMA (25-yr renewable); no ownership.",flag:"⚠ Leasehold only — no equity (foreign-safe)"},
+    {brand:"Camella (Vista Land)",project:"Camella Alta Subic",type:"House-and-lot · ~3BR · freehold",price:"₱5.96M",priceP:5964000,monthly:"₱37.0k/mo",monthlyP:36990,note:"Freehold titled ownership in Subic town; developer in-house terms ~₱30k/mo.",flag:"✓ Freehold (outside freeport)"},
+    {brand:"Camella (Vista Land)",project:"Camella Subic — EasyHome entry",type:"Starter house-and-lot / townhouse · ~2BR",price:"₱1.5M",priceP:1500000,monthly:"₱9.3k/mo",monthlyP:9300,note:"Cheapest freehold foothold near Subic Bay, titled, Filipino-ownership.",flag:"✓ Freehold budget entry"}],
+  singapore:[
+    {brand:"GuocoLand",project:"Lentor Central Residences (OCR-edge)",type:"1BR · ~463 sqft",price:"S$975k (~₱41.9M)",priceP:41925000,monthly:"~₱187k/mo",monthlyP:187000,note:"High-earning relocator. Foreigners pay ~60% ABSD (≈+S$585k) on top; no HDB.",flag:"⚠ Foreigner ABSD 60% · loans capped · monthly illustrative"},
+    {brand:"UOL / Singapore Land",project:"The Sen — Upper Bukit Timah (RCR)",type:"1BR · ~451 sqft",price:"S$993k (~₱42.7M)",priceP:42699000,monthly:"~₱190k/mo",monthlyP:190000,note:"Lowest-entry RCR private 1BR; same ABSD trap and no HDB access.",flag:"⚠ Foreigner ABSD 60% · monthly illustrative"}],
+  nomad:[
+    {brand:"Sansiri",project:"FLO by Sansiri — Khlong San, Bangkok",type:"Studio · 24 sqm",price:"฿3.2M (~₱5.1M)",priceP:5120000,monthly:"~₱20.5k/mo",monthlyP:20500,note:"Classic Bangkok nomad base — foreign freehold within the 49% quota (FET remittance).",flag:"✓ Foreign freehold (49% quota) · monthly illustrative"},
+    {brand:"Sansiri",project:"Sari by Sansiri — Phra Khanong, Bangkok",type:"1BR · ~28–30 sqm",price:"฿2.78M (~₱4.45M)",priceP:4450000,monthly:"~₱17.8k/mo",monthlyP:17800,note:"Cheaper nomad alt down the Sukhumvit line; same 49% foreign-quota freehold rule.",flag:"✓ Foreign freehold (49% quota) · monthly illustrative"}],
 };
 function affordBand(monthlyP){
   const pct=Math.round(monthlyP/SAVE_CAP*100);
@@ -334,22 +378,34 @@ function affordBand(monthlyP){
   if(pct>75){col="var(--bad)";lbl="heavy";} else if(pct>40){col="var(--warn)";lbl="a stretch";}
   return {pct,col,lbl};
 }
-function propertyLine(id){const re=REALESTATE[id];if(!re)return"";
-  return `<div style="font-size:12px;color:var(--mut);margin-top:3px">🏗️ ${re.brand.split(' (')[0]} · <b style="color:var(--txt)">${re.price}</b> · ${re.monthly}</div>`;}
-function propertyPanel(id){const re=REALESTATE[id];if(!re)return"";const b=affordBand(re.monthlyP);
-  return `<div style="margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px">
-    <div class="src" style="color:var(--live)">🏗️ Representative property</div>
-    <div style="margin:4px 0 2px"><b>${re.brand}</b></div>
-    <div class="muted" style="font-size:13px">${re.project}</div>
-    <div class="dim" style="font-size:12.5px;margin-top:2px">${re.type}</div>
-    <div style="display:flex;gap:18px;flex-wrap:wrap;margin:12px 0 6px">
-      <div><div class="dim" style="font-size:11px">TOTAL PRICE</div><div style="font-size:20px;font-weight:800">${re.price}</div></div>
-      <div><div class="dim" style="font-size:11px">MONTHLY PAYMENT</div><div style="font-size:20px;font-weight:800;color:var(--live)">${re.monthly}</div></div>
-      <div><div class="dim" style="font-size:11px">VS YOUR ₱120k/mo SAVINGS</div><div style="font-size:20px;font-weight:800;color:${b.col}">${b.pct}% <span style="font-size:12px;font-weight:600">${b.lbl}</span></div></div>
-    </div>
-    <div class="note" style="margin-top:2px">${re.terms}</div>
-    ${re.flag?`<div style="font-size:12px;margin-top:6px;color:${re.flag[0]==='⚠'?'var(--warn)':'var(--good)'}">${re.flag}</div>`:''}
-    <div class="muted" style="font-size:12.5px;margin-top:6px">${re.note}</div>
+function flagCol(f){return f[0]==='⚠'?'var(--warn)':(f[0]==='✓'?'var(--good)':'var(--mut)');}
+function fmtM(v){return '₱'+(v>=1e6?(v/1e6).toFixed(v%1e6?1:0)+'M':Math.round(v/1e3)+'k');}
+function propertyLine(id){const arr=REALESTATE[id];if(!arr||!arr.length)return"";
+  const prices=arr.map(r=>r.priceP).filter(Boolean);
+  const monthlies=arr.map(r=>r.monthlyP).filter(Boolean);
+  const range=prices.length?(Math.min(...prices)===Math.max(...prices)?fmtM(prices[0]):fmtM(Math.min(...prices))+'–'+fmtM(Math.max(...prices))):'lease';
+  const fromMo=monthlies.length?'from ₱'+Math.round(Math.min(...monthlies)/1000)+'k/mo':'';
+  return `<div style="font-size:12px;color:var(--mut);margin-top:3px">🏗️ ${arr.length} option${arr.length>1?'s':''} · <b style="color:var(--txt)">${range}</b> · ${fromMo}</div>`;}
+function propertyPanel(id){const arr=REALESTATE[id];if(!arr||!arr.length)return"";
+  const rows=arr.map(re=>{const b=affordBand(re.monthlyP);
+    const badge=re.priceP?`<span style="color:${b.col}">${b.pct}% ${b.lbl}</span>`:`<span style="color:var(--mut)">lease</span>`;
+    return `<div style="border-top:1px solid var(--line);padding:9px 0">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+        <div style="min-width:0"><b>${re.brand}</b> <span class="muted" style="font-size:12.5px">${re.project}</span>
+          <div class="dim" style="font-size:12px;margin-top:1px">${re.type}</div></div>
+        <div style="text-align:right;white-space:nowrap"><div style="font-size:16px;font-weight:800">${re.price}</div>
+          <div style="font-size:12px;color:var(--live)">${re.monthly}</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:10px;margin-top:4px;align-items:center">
+        <div class="muted" style="font-size:12px">${re.note}</div>
+        <div style="font-size:12px;font-weight:700;white-space:nowrap">${badge}</div>
+      </div>
+      ${re.flag?`<div style="font-size:11.5px;margin-top:3px;color:${flagCol(re.flag)}">${re.flag}</div>`:''}
+    </div>`;}).join("");
+  return `<div style="margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px 14px 12px">
+    <div class="src" style="color:var(--live);padding-top:8px">🏗️ ${arr.length} properties · brand · total price · monthly</div>
+    ${rows}
+    <div class="note" style="margin-top:9px">Monthly = 20% DP · 80% loan · 20-yr @ 7% (lots ~10-yr; foreign markets illustrative — restricted financing). The “% vs your ₱120k/mo savings” badge shows how heavy each amortization is. 2026 estimates, not quotes.</div>
   </div>`;}
 
 /* ---- WORK candidates ---- */
@@ -490,7 +546,7 @@ function pickCard(tag,col,e,kind){
     <div class="muted" style="font-size:13px">${e.c.sub}</div>
     <div class="bigbar" style="margin-top:10px"><i style="width:${e.sc}%;background:${col}"></i></div>
     <div class="dim" style="font-size:11px;margin-top:4px">${e.sc.toFixed(0)} / 100 fit</div>
-    ${kind==='live'&&REALESTATE[e.c.id]?`<div style="font-size:12px;color:var(--mut);margin-top:6px">🏗️ ${REALESTATE[e.c.id].brand.split(' (')[0]} · <b style="color:var(--txt)">${REALESTATE[e.c.id].price}</b> · ${REALESTATE[e.c.id].monthly}</div>`:''}
+    ${kind==='live'?propertyLine(e.c.id):''}
   </div>`;
 }
 function miniRow(e,i,work){
