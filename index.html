@@ -640,6 +640,23 @@ const CARMODELS = {
     {brand:"Mitsubishi",model:"Triton GLX 2WD AT",type:"Midsize pickup · 2.4L diesel",price:"₱1.74M",priceP:1735000,monthly:"₱28.8k/mo",monthlyP:28812,note:"Most powerful diesel here (181hp/430Nm) for loaded island trips; comfy ride, good warranty, wide service reach."},
     {brand:"Toyota",model:"Hilux 2.4 G DSL 4x2 AT",type:"Midsize pickup · 2.4L diesel",price:"₱1.74M",priceP:1740000,monthly:"₱28.9k/mo",monthlyP:28895,note:"Legendary durability + cheapest-to-maintain network; frugal 2.4 diesel, top resale — the cost-conscious workhorse.",flag:"ⓘ 4x4 variant adds true beach-sand capability"}],
 };
+/* Per-model photo (Wikimedia Commons, hotlinkable) + nearest south-Metro-Manila dealer + Google Maps (researched/verified by 5 subagents). Keyed by model string. */
+const CARMEDIA = {
+  "Vios 1.3 XLE CVT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Toyota_Vios_(XP150)_sedan_front_view.jpg?width=420",dealer:"Toyota Alabang (Las Piñas)",maps:"https://www.google.com/maps/search/?api=1&query=Toyota%20Alabang%20Inc%20Las%20Pi%C3%B1as"},
+  "Dzire Hybrid GLX CVT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Suzuki_Dzire_1.2_GLX_2022_(53379552217).jpg?width=420",dealer:"Suzuki Auto Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Suzuki%20Auto%20Alabang%20Westgate%20Filinvest"},
+  "City 1.5 V CVT (Sensing)":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Honda_City_2020.jpg?width=420",dealer:"Honda Cars Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Honda%20Cars%20Alabang%20Muntinlupa"},
+  "Territory 1.5 Titanium EcoBoost":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Ford%20Territory%201.5%20Titanium%20X%202024%20(1).jpg?width=420",dealer:"Ford Alabang (Dearborn)",maps:"https://www.google.com/maps/search/?api=1&query=Ford%20Alabang%20Muntinlupa"},
+  "HR-V 1.5 S CVT (Sensing)":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/2017%20Honda%20HR-V.jpg?width=420",dealer:"Honda Cars Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Honda%20Cars%20Alabang%20Muntinlupa"},
+  "Corolla Cross 1.8 G HEV":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Toyota%20Corolla%20Cross%201.8%20V%20Hybrid%202025%20(9).jpg?width=420",dealer:"Toyota Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Toyota%20Alabang%20Inc%20Muntinlupa"},
+  "Ertiga Hybrid GL AT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Suzuki%20Ertiga,%20MPV%20front%20view.jpg?width=420",dealer:"Suzuki Auto Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Suzuki%20Auto%20Alabang"},
+  "Xpander GLS AT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Mitsubishi%20Xpander%201.5%20GLS%20(Expander)%202023.jpg?width=420",dealer:"Citimotors Alabang (Mitsubishi)",maps:"https://www.google.com/maps/search/?api=1&query=Citimotors%20Alabang%20Mitsubishi"},
+  "Innova 2.8 J Diesel MT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Toyota%20Innova%20Crysta.jpg?width=420",dealer:"Toyota Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Toyota%20Alabang%20Inc"},
+  "Kicks e-POWER VE":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/2020%20Nissan%20Kicks%20e-Power%20VL.jpg?width=420",dealer:"Nissan Westgate Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Nissan%20Westgate%20Alabang"},
+  "Dolphin (44.9 kWh)":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/BYD%20Dolphin,%202023,%20Japan,%20front.jpg?width=420",dealer:"BYD Alabang (ACMobility)",maps:"https://www.google.com/maps/search/?api=1&query=BYD%20Alabang%20ACMobility"},
+  "Ranger 2.0 Turbo XLT 4x2 AT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/2021%20Ford%20Ranger%20XL%20SuperCab%204WD%20in%20Iconic%20Silver,%20front%20left.jpg?width=420",dealer:"Ford Alabang (Dearborn)",maps:"https://www.google.com/maps/search/?api=1&query=Ford%20Alabang%20Muntinlupa"},
+  "Triton GLX 2WD AT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Mitsubishi%20Strada%20Triton%204x4%20Athlete%202024%20(1).jpg?width=420",dealer:"Mitsubishi Las Piñas (Citimotors)",maps:"https://www.google.com/maps/search/?api=1&query=Mitsubishi%20Motors%20Las%20Pi%C3%B1as%20Citimotors"},
+  "Hilux 2.4 G DSL 4x2 AT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Toyota%20Hilux%20N80%20001.JPG?width=420",dealer:"Toyota Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Toyota%20Alabang%20Inc%20Muntinlupa"},
+};
 function carLine(id){
   if(id==='none') return `<div style="font-size:12px;color:var(--mut);margin-top:3px">🚆 No purchase · save the ₱15–29k/mo + ownership costs</div>`;
   const arr=CARMODELS[id]; if(!arr||!arr.length) return "";
@@ -657,18 +674,27 @@ function carPanel(id){
   }
   const arr=CARMODELS[id]; if(!arr||!arr.length) return "";
   const rows=arr.map(re=>{const b=affordBand(re.monthlyP);
-    return `<div style="border-top:1px solid var(--line);padding:9px 0">
-      <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
-        <div style="min-width:0"><b>${re.brand} ${re.model}</b>
-          <div class="dim" style="font-size:12px;margin-top:1px">${re.type}</div></div>
-        <div style="text-align:right;white-space:nowrap"><div style="font-size:16px;font-weight:800">${re.price}</div>
-          <div style="font-size:12px;color:#3fb950">${re.monthly}</div></div>
+    const md=CARMEDIA[re.model]||{};
+    const thumb=md.img?`<img src="${md.img}" alt="${re.brand} ${re.model}" loading="lazy" onerror="this.style.display='none'" style="width:92px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);flex:none;background:var(--panel)">`:'';
+    const maps=md.maps?`<a href="${md.maps}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--acc);text-decoration:none;white-space:nowrap">📍 ${md.dealer||'Nearest store'} ↗</a>`:'';
+    return `<div style="border-top:1px solid var(--line);padding:10px 0;display:flex;gap:12px">
+      ${thumb}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+          <div style="min-width:0"><b>${re.brand} ${re.model}</b>
+            <div class="dim" style="font-size:12px;margin-top:1px">${re.type}</div></div>
+          <div style="text-align:right;white-space:nowrap"><div style="font-size:16px;font-weight:800">${re.price}</div>
+            <div style="font-size:12px;color:#3fb950">${re.monthly}</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:10px;margin-top:4px;align-items:center">
+          <div class="muted" style="font-size:12px">${re.note}</div>
+          <div style="font-size:12px;font-weight:700;white-space:nowrap;color:${b.col}">${b.pct}% ${b.lbl}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:10px;margin-top:5px;align-items:center">
+          ${maps||'<span></span>'}
+          ${re.flag?`<div style="font-size:11.5px;color:${flagCol(re.flag)}">${re.flag}</div>`:'<span></span>'}
+        </div>
       </div>
-      <div style="display:flex;justify-content:space-between;gap:10px;margin-top:4px;align-items:center">
-        <div class="muted" style="font-size:12px">${re.note}</div>
-        <div style="font-size:12px;font-weight:700;white-space:nowrap;color:${b.col}">${b.pct}% ${b.lbl}</div>
-      </div>
-      ${re.flag?`<div style="font-size:11.5px;margin-top:3px;color:${flagCol(re.flag)}">${re.flag}</div>`:''}
     </div>`;}).join("");
   return `<div style="margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px 14px 12px">
     <div class="src" style="color:#3fb950;padding-top:8px">🚗 ${arr.length} models · brand · price · monthly</div>
