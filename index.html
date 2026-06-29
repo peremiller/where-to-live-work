@@ -147,7 +147,7 @@
   <section class="view" data-v="work">
     <div class="card">
       <h2>💼 Where to work</h2>
-      <p class="muted">Six realistic career paths scored against what matters to you — employer, remote vs onsite, founder vs employee. Tap a path for real <b>LinkedIn Easy Apply</b> roles (title, company, pay) with one-click apply links.</p>
+      <p class="muted">Six realistic career paths scored against what matters to you. Tap a path for roles with PHP pay, cost of living, and an accurate apply link — <b style="color:var(--good)">✓ Live postings</b> open the exact role on the employer's site (verified 2026-06-29); searches/programs are labeled as such.</p>
       <div class="row"><span class="dim" style="font-size:12px">Weighting profile:</span><span id="workProfileTag" class="pill"></span><button class="btn sm" onclick="go('priorities')">Adjust priorities</button></div>
     </div>
     <div id="workList"></div>
@@ -450,15 +450,15 @@ const WORKJOBS = {
   bgclead:{cat:"https://www.linkedin.com/jobs/search/?keywords=QA%20Automation%20Lead%20OR%20Test%20Automation%20Lead%20OR%20SDET%20Lead&location=Taguig%2C%20Metro%20Manila%2C%20Philippines&f_AL=true",jobs:[
     {title:"Lead SDET",company:"Viventis (BGC client)",loc:"BGC · Hybrid",pay:"₱120–180k/mo",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Lead%20SDET&location=Taguig%2C%20Metro%20Manila%2C%20Philippines&f_AL=true",note:"Direct level-up to Lead SDET; automation-leadership stretch from your QA base."},
     {title:"QA Automation Lead / SDET",company:"Capgemini",loc:"BGC · Hybrid",pay:"₱100–150k/mo",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=QA%20Automation%20Lead%20SDET&location=Taguig%2C%20Metro%20Manila%2C%20Philippines&f_AL=true",note:"Enterprise SDET; CI/CD quality gates + framework ownership feed the TPM pivot."},
-    {title:"Test Automation Lead (Playwright/Appium)",company:"NCS Philippines",loc:"BGC · Hybrid",pay:"₱95–145k/mo",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Test%20Automation%20Lead%20Playwright&location=Taguig%2C%20Metro%20Manila%2C%20Philippines&f_AL=true",note:"Modern stack (Playwright/Appium/CI-CD) builds the automation-lead credential."}]},
+    {title:"Automation Engineer [Playwright]",company:"NCS Philippines",loc:"Metro Manila · Onsite",pay:"₱95–145k/mo",easy:true,url:"",note:"Real currently-open NCS posting (Kalibrr); modern Playwright stack builds the automation-lead credential."}]},
   remotetpm:{cat:"https://www.linkedin.com/jobs/search/?keywords=Technical%20Program%20Manager&f_AL=true&f_WT=2",jobs:[
     {title:"Technical Program Manager (Platform)",company:"Zapier",loc:"Remote · Global",pay:"$150–200k",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Technical%20Program%20Manager&f_AL=true&f_WT=2",note:"True work-from-anywhere; async rigor maps to your SQE quality-gate background."},
     {title:"Senior TPM, R&D PMO",company:"GitLab",loc:"Remote · NA/EMEA",pay:"$170–242k",easy:false,url:"https://www.linkedin.com/jobs/search/?keywords=Senior%20Technical%20Program%20Manager&f_AL=true&f_WT=2",note:"All-remote; PMO program ownership ≈ a 1:1 lift. Many roles route via Greenhouse — verify per listing."},
     {title:"Program Manager (Launches)",company:"Automattic",loc:"Remote · Global",pay:"$90–200k+",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Program%20Manager%20Launches&f_AL=true&f_WT=2",note:"Distributed-first, equal pay anywhere; a rung below TPM to build launch cred."},
-    {title:"TPM, Compute / API Platform",company:"Anthropic",loc:"Remote-friendly · US-primary",pay:"$200–300k+",easy:false,url:"https://www.linkedin.com/jobs/search/?keywords=AI%20Technical%20Program%20Manager&f_AL=true&f_WT=2",note:"The AI-lab stretch (your application target). Office-first + Greenhouse ATS — aspirational, not one-click."}]},
+    {title:"Technical Program Manager, Launches",company:"Anthropic",loc:"San Francisco / New York · Onsite",pay:"$200–300k+",easy:false,url:"https://job-boards.greenhouse.io/anthropic/jobs/5208193008",note:"Your actual application target — a real, currently-open Anthropic posting (Greenhouse). Office-first SF/NYC, not remote."}]},
   relocate:{cat:"https://www.linkedin.com/jobs/search/?keywords=QA%20Manager%20OR%20Test%20Automation%20Lead%20OR%20Technical%20Program%20Manager&location=Singapore&f_AL=true",jobs:[
-    {title:"Quality Engineering Manager / QA Lead",company:"Grab",loc:"Singapore · Onsite/Hybrid",pay:"S$130–185k/yr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=QA%20Manager&location=Singapore&f_AL=true",note:"Direct QA→leadership fit; Grab routinely sponsors an Employment Pass."},
-    {title:"Technical Program Manager",company:"ByteDance / TikTok",loc:"Singapore · Hybrid",pay:"S$140–230k/yr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Technical%20Program%20Manager&location=Singapore&f_AL=true",note:"Large SG eng hub, active EP sponsor; high-volume hiring — very realistic."},
+    {title:"Lead Technical Program Manager",company:"Grab",loc:"Singapore · Onsite/Hybrid",pay:"S$130–185k/yr",easy:true,url:"",note:"Real currently-open Grab posting; QA→TPM leadership fit. Grab routinely sponsors an Employment Pass."},
+    {title:"Technical Program Manager, Customer Support",company:"ByteDance / TikTok",loc:"Singapore · Hybrid",pay:"S$140–230k/yr",easy:true,url:"",note:"Real currently-open TikTok TPM posting in their large SG hub; active EP sponsor."},
     {title:"Test Automation Lead / SDET Lead",company:"Infosys (DBS/GovTech vendor)",loc:"Singapore · Onsite",pay:"S$90–150k/yr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Test%20Automation%20Lead&location=Singapore&f_AL=true",note:"Closest to your automation depth; IT-services firms are the most reliable EP sponsors."},
     {title:"TPM / QA Lead",company:"Atlassian / Canva",loc:"Sydney, AU · Hybrid",pay:"A$140–220k/yr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Technical%20Program%20Manager&location=Sydney%2C%20Australia&f_AL=true",note:"Confirmed Subclass 482 sponsors; you clear the 2-yr bar. A strong AU backup to SG."}]},
   founder:{cat:"https://www.linkedin.com/jobs/search/?keywords=Entrepreneur%20in%20Residence%20OR%20Founder%20in%20Residence%20OR%20Founding&f_AL=true&f_TPR=r604800",jobs:[
@@ -468,7 +468,7 @@ const WORKJOBS = {
   freelance:{cat:"https://www.linkedin.com/jobs/search/?keywords=Contract%20QA%20Automation%20OR%20SDET%20OR%20AI%20Test%20Engineer&f_AL=true&f_WT=2&f_JT=C",jobs:[
     {title:"Contract QA Automation Engineer",company:"TEKsystems",loc:"Remote · Contract",pay:"$45–65/hr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Contract%20QA%20Automation%20Engineer&f_AL=true&f_WT=2&f_JT=C",note:"Direct fit for your SQE/test-automation core; high volume of remote contract reqs."},
     {title:"SDET (Contract) — API/UI Framework",company:"Robert Half",loc:"Remote · Contract",pay:"$50–70/hr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=SDET%20Contract&f_AL=true&f_WT=2&f_JT=C",note:"Senior SDET framework work — matches your Associate-Manager-level depth."},
-    {title:"Software Engineer — LLM Evaluation",company:"Mercor",loc:"Remote · Contract",pay:"$50–100/hr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=LLM%20Evaluation%20Engineer&f_AL=true&f_WT=2&f_JT=C",note:"Your Python-for-QA + AI workflows map cleanly to eval guidelines; async 10–40 hrs/wk."},
+    {title:"Researcher, AI Evaluation",company:"Mercor",loc:"Remote · Contract",pay:"$50–100/hr",easy:true,url:"",note:"Real currently-open Mercor posting; your Python-for-QA + AI workflows map cleanly to eval work; async."},
     {title:"Freelance QA / Test Automation Consultant",company:"Toptal",loc:"Remote · Contract",pay:"$60–200+/hr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=QA%20Consultant%20Test%20Automation&f_AL=true&f_WT=2&f_JT=C",note:"Premium network; your profile clears the senior bar, and you set your own rate."}]},
 };
 /* Per-role PHP salary conversion + cost-of-living location, keyed by company.
@@ -506,30 +506,32 @@ const EXPENSES = {
   bangkok:{city:"Bangkok",totalP:65620,localTotal:"฿38,600/mo (~₱65.6k)"},
 };
 function kPhp(v){const a=Math.abs(v);return '₱'+(a>=1e6?(v/1e6).toFixed(1)+'M':Math.round(v/1e3)+'k');}
-/* ACCURATE apply links — each employer's official careers/ATS page, deep-linked to the role
-   where supported, WebFetch-verified to load (researched by 5 subagents). via = source label. */
+/* APPLY links + sync state (live snapshot 2026-06-29, pulled from ATS APIs/boards by 5 subagents).
+   kind: "posting" = link opens THAT EXACT live role (in sync); "search" = no specific role open now,
+   opens the employer's filtered careers page; "program" = apply to a program/board, not one posting. */
+const SNAPSHOT = "2026-06-29";
 const APPLY = {
-  "Accenture Philippines":{url:"https://www.accenture.com/ph-en/careers/jobsearch?jk=quality+engineering",via:"Accenture Careers"},
-  "Cognizant":{url:"https://careers.cognizant.com/global-en/jobs/?keyword=test%20lead&location=Philippines",via:"Cognizant Careers"},
-  "Finastra":{url:"https://finastra.wd3.myworkdayjobs.com/FINC",via:"Finastra · Workday"},
-  "Viventis (BGC client)":{url:"https://www.linkedin.com/company/viventis-search-asia/jobs",via:"Viventis · LinkedIn"},
-  "Capgemini":{url:"https://www.capgemini.com/careers/join-capgemini/job-search/?country=Philippines&keyword=QA%20Automation",via:"Capgemini Careers"},
-  "NCS Philippines":{url:"https://www.ncs.co/careers/",via:"NCS Careers"},
-  "Zapier":{url:"https://zapier.com/jobs",via:"Zapier Careers"},
-  "GitLab":{url:"https://job-boards.greenhouse.io/gitlab",via:"GitLab · Greenhouse"},
-  "Automattic":{url:"https://automattic.com/work-with-us/",via:"Automattic Careers"},
-  "Anthropic":{url:"https://job-boards.greenhouse.io/anthropic",via:"Anthropic · Greenhouse"},
-  "Grab":{url:"https://www.grab.careers/en/jobs/?location=Singapore%2C%20Singapore&team=Engineering",via:"Grab Careers"},
-  "ByteDance / TikTok":{url:"https://joinbytedance.com/search?keywords=Technical%20Program%20Manager&location=Singapore",via:"ByteDance Careers"},
-  "Infosys (DBS/GovTech vendor)":{url:"https://digitalcareers.infosys.com/infosys/global-careers?location=Singapore&skills=Automation%20testing",via:"Infosys Careers"},
-  "Atlassian / Canva":{url:"https://www.atlassian.com/company/careers/all-jobs",via:"Atlassian Careers"},
-  "Antler":{url:"https://www.antler.co/residency",via:"Antler Residency"},
-  "FutureSight":{url:"https://futuresight.ventures/job/futuresight-website-entrepreneur-in-residence-future-ceo-founder/",via:"FutureSight"},
-  "YC-backed / stealth startups":{url:"https://www.workatastartup.com/jobs",via:"YC · Work at a Startup"},
-  "TEKsystems":{url:"https://careers.teksystems.com/us/en",via:"TEKsystems Careers"},
-  "Robert Half":{url:"https://www.roberthalf.com/us/en/jobs/all/qa-automation",via:"Robert Half Jobs"},
-  "Mercor":{url:"https://work.mercor.com/jobs",via:"Mercor Jobs"},
-  "Toptal":{url:"https://www.toptal.com/talent/apply",via:"Toptal Apply"},
+  "Accenture Philippines":{url:"https://www.accenture.com/ph-en/careers/jobsearch?jk=quality%20engineer&clearfilter=1",via:"Accenture Careers",kind:"search"},
+  "Cognizant":{url:"https://careers.cognizant.com/global-en/jobs/?keyword=QA%20automation&location=Philippines",via:"Cognizant Careers",kind:"search"},
+  "Finastra":{url:"https://finastra.wd3.myworkdayjobs.com/FINC",via:"Finastra · Workday",kind:"search"},
+  "Viventis (BGC client)":{url:"https://www.linkedin.com/company/viventis-search-asia/jobs",via:"Viventis · LinkedIn",kind:"search"},
+  "Capgemini":{url:"https://www.capgemini.com/careers/join-capgemini/job-search/?search-careers-keyword=QA%20test%20automation&search-careers-country=Philippines",via:"Capgemini Careers",kind:"search"},
+  "NCS Philippines":{url:"https://www.kalibrr.com/c/ncs-philippines/jobs/266372/automation-engineer-playwright-2",via:"Kalibrr",kind:"posting"},
+  "Zapier":{url:"https://zapier.com/jobs",via:"Zapier Careers",kind:"search"},
+  "GitLab":{url:"https://job-boards.greenhouse.io/gitlab",via:"GitLab · Greenhouse",kind:"search"},
+  "Automattic":{url:"https://automattic.com/work-with-us/",via:"Automattic Careers",kind:"search"},
+  "Anthropic":{url:"https://job-boards.greenhouse.io/anthropic/jobs/5208193008",via:"Greenhouse",kind:"posting"},
+  "Grab":{url:"https://www.grab.careers/en/jobs/743999982243551/lead-technical-program-manager/",via:"Grab Careers",kind:"posting"},
+  "ByteDance / TikTok":{url:"https://lifeattiktok.com/search/7503917423352285448",via:"TikTok",kind:"posting"},
+  "Infosys (DBS/GovTech vendor)":{url:"https://digitalcareers.infosys.com/infosys/global-careers?location=Singapore",via:"Infosys Careers",kind:"search"},
+  "Atlassian / Canva":{url:"https://www.atlassian.com/company/careers/all-jobs",via:"Atlassian Careers",kind:"search"},
+  "Antler":{url:"https://www.antler.co/residency",via:"Antler Residency",kind:"program"},
+  "FutureSight":{url:"https://futuresight.ventures/job/futuresight-website-entrepreneur-in-residence-future-ceo-founder/",via:"FutureSight",kind:"program"},
+  "YC-backed / stealth startups":{url:"https://www.workatastartup.com/jobs",via:"YC · Work at a Startup",kind:"program"},
+  "TEKsystems":{url:"https://careers.teksystems.com/us/en",via:"TEKsystems",kind:"search"},
+  "Robert Half":{url:"https://www.roberthalf.com/us/en/jobs/all/qa-automation",via:"Robert Half",kind:"search"},
+  "Mercor":{url:"https://work.mercor.com/jobs/list_AAABmGiJx9b5NQ-26PJLY6Ak",via:"Mercor",kind:"posting"},
+  "Toptal":{url:"https://www.toptal.com/talent/apply",via:"Toptal",kind:"program"},
 };
 function jobsLine(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
   const uniq=[...new Set(d.jobs.map(j=>j.company.split(' (')[0].split(' / ')[0]))];
@@ -537,7 +539,9 @@ function jobsLine(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
 function jobsPanel(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
   let remote=false;
   const rows=d.jobs.map(j=>{
-    const ap=APPLY[j.company]||{url:j.url,via:"LinkedIn"};
+    const ap=APPLY[j.company]||{url:j.url||"#",via:"LinkedIn",kind:"search"};
+    const KM={posting:{lbl:"✓ Live posting",col:"var(--good)"},search:{lbl:"🔎 Search",col:"var(--mut)"},program:{lbl:"▣ Program",col:"var(--acc)"}};
+    const km=KM[ap.kind]||KM.search;
     const m=JOBMETA[j.company]||{}; const exp=EXPENSES[m.costLoc];
     if(/Remote/i.test(j.loc)) remote=true;
     const phpLine=m.payPhp?`<div class="dim" style="font-size:11.5px;margin-top:1px">${m.payPhp}</div>`:'';
@@ -553,17 +557,17 @@ function jobsPanel(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
         <div style="min-width:0"><b>${j.title}</b> <span class="muted" style="font-size:12.5px">@ ${j.company}</span>
           <div class="dim" style="font-size:12px;margin-top:1px">${j.loc}</div></div>
         <div style="text-align:right;white-space:nowrap"><div style="font-size:14px;font-weight:800">${j.pay}</div>${phpLine}
-          <a href="${ap.url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;text-decoration:none;color:var(--good)">Apply · ${ap.via} ↗</a></div>
+          <a href="${ap.url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;text-decoration:none;color:${km.col}">${km.lbl} · ${ap.via} ↗</a></div>
       </div>
       <div class="muted" style="font-size:12px;margin-top:4px">${j.note}</div>
       ${costLine}
     </div>`;}).join("");
   const baseNote=remote?` Remote roles are based in PH (Manila ~₱100k/mo) — or go cheaper: Cebu ~₱57k or Bangkok ~₱66k/mo for a bigger surplus.`:'';
   return `<div style="margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px 14px 12px">
-    <div class="src" style="color:#ff9f43;padding-top:8px">💼 ${d.jobs.length} roles · pay · ₱ · cost of living · apply</div>
+    <div class="src" style="color:#ff9f43;padding-top:8px">💼 ${d.jobs.length} roles · pay · ₱ · cost of living · apply <span style="color:var(--dim);font-weight:400">· listings verified ${SNAPSHOT}</span></div>
     ${rows}
     <a href="${d.cat}" target="_blank" rel="noopener" class="btn sm" style="display:inline-block;margin-top:10px;text-decoration:none">Browse more on LinkedIn ↗</a>
-    <div class="note" style="margin-top:8px"><b>Apply</b> links go to each employer's official careers/ATS page (verified to load), deep-linked to the role where supported — not a generic search; specific postings rotate, so use the page's own filters. ₱ = 2026 conversion (USD ₱61 · SGD ₱47 · AUD ₱42). “Live in …” = single-pro monthly cost of living; <b>net</b> = low-end pay − local expenses.${baseNote} 2026 estimates; FX & rents move.</div>
+    <div class="note" style="margin-top:8px"><b style="color:var(--good)">✓ Live posting</b> opens that exact open role (pulled from the employer's ATS on ${SNAPSHOT}); <b style="color:var(--mut)">🔎 Search</b> = no specific role open right now, opens the employer's filtered careers page; <b style="color:var(--acc)">▣ Program</b> = apply to a program/board, not one posting. Postings rotate — if a link 404s, it filled; use the careers page. ₱ = 2026 conversion (USD ₱61 · SGD ₱47 · AUD ₱42); “Live in …” = single-pro cost of living; net = low-end pay − expenses.${baseNote}</div>
   </div>`;}
 
 /* ---- default weights (seeded from his profile) ---- */
