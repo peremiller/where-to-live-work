@@ -161,6 +161,7 @@
       <h2>🚗 Car to buy</h2>
       <p class="muted">Six options — from a value sedan to a beach-trip pickup, plus the honest "no car" baseline — scored against your needs (Metro Manila traffic + weekend trips, cost-conscious, family). Tap one for real 2026 PH models, prices, and monthly amortization.</p>
       <div class="row"><span class="dim" style="font-size:12px">Weighting profile:</span><span id="carProfileTag" class="pill"></span><button class="btn sm" onclick="go('priorities')">Adjust priorities</button></div>
+      <div class="row" style="margin-top:8px"><span class="dim" style="font-size:12px">⬇ Export all car details:</span><button class="btn sm acc" onclick="exportCarsXLSX()">Excel (.xlsx)</button><button class="btn sm" onclick="exportCarsCSV()">CSV</button><span class="dim" style="font-size:11.5px">— 16 models · price, monthly, specs, dealer, map</span></div>
     </div>
     <div id="carList"></div>
   </section>
@@ -657,6 +658,93 @@ const CARMEDIA = {
   "Triton GLX 2WD AT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Mitsubishi%20Strada%20Triton%204x4%20Athlete%202024%20(1).jpg?width=420",dealer:"Mitsubishi Las Piñas (Citimotors)",maps:"https://www.google.com/maps/search/?api=1&query=Mitsubishi%20Motors%20Las%20Pi%C3%B1as%20Citimotors"},
   "Hilux 2.4 G DSL 4x2 AT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Toyota%20Hilux%20N80%20001.JPG?width=420",dealer:"Toyota Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Toyota%20Alabang%20Inc%20Muntinlupa"},
 };
+/* Extra per-model specs for the spreadsheet export (researched by 5 subagents). Keyed by model string. */
+const CARSPECS = {
+  "Vios 1.3 XLE CVT":{seats:5,economy:"~19 km/L",engine:"1.3L gas (1329cc)",power:"99 hp / 123 Nm",transmission:"CVT",warranty:"3 yrs / 100,000 km"},
+  "Dzire Hybrid GLX CVT":{seats:5,economy:"~20 km/L",engine:"1.2L mild-hybrid (1197cc)",power:"80 hp / 112 Nm",transmission:"CVT",warranty:"3 yrs / 100,000 km (hybrid 5 yrs)"},
+  "City 1.5 V CVT (Sensing)":{seats:5,economy:"~22 km/L",engine:"1.5L i-VTEC (1498cc)",power:"119 hp / 145 Nm",transmission:"CVT",warranty:"3 yrs / 100,000 km"},
+  "Territory 1.5 Titanium EcoBoost":{seats:5,economy:"~14 km/L",engine:"1.5L turbo (1499cc)",power:"160 hp / 248 Nm",transmission:"7AT",warranty:"5 yrs / 150,000 km"},
+  "HR-V 1.5 S CVT (Sensing)":{seats:5,economy:"~17 km/L",engine:"1.5L i-VTEC",power:"121 hp / 145 Nm",transmission:"CVT",warranty:"5 yrs / 140,000 km"},
+  "Corolla Cross 1.8 G HEV":{seats:5,economy:"~23 km/L",engine:"1.8L hybrid (1798cc)",power:"122 hp / 142 Nm",transmission:"E-CVT",warranty:"5 yrs / 140,000 km (batt 8 yrs)"},
+  "Ertiga Hybrid GL AT":{seats:7,economy:"~12.5 km/L",engine:"1.5L gas + 12V mild-hybrid",power:"103 hp / 138 Nm",transmission:"4AT",warranty:"3 yrs / 100,000 km"},
+  "Xpander GLS AT":{seats:7,economy:"~13 km/L",engine:"1.5L gas (1499cc)",power:"103 hp / 141 Nm",transmission:"4AT",warranty:"3 yrs / 100,000 km"},
+  "Innova 2.8 J Diesel MT":{seats:8,economy:"~10–12 km/L",engine:"2.8L turbo-diesel (2755cc)",power:"168 hp / 343 Nm",transmission:"5MT",warranty:"3 yrs / 100,000 km"},
+  "Kicks e-POWER VE":{seats:5,economy:"~22–25 km/L",engine:"1.2L e-POWER series hybrid",power:"136 PS / 280 Nm",transmission:"single-speed (e-POWER)",warranty:"5 yrs / 150,000 km (incl. battery)"},
+  "Dolphin (44.9 kWh)":{seats:5,economy:"~405 km / 44.9 kWh",engine:"Electric (Blade LFP)",power:"94 hp / 180 Nm",transmission:"single-speed EV",warranty:"6 yrs / 150,000 km (batt 8 yrs/160,000)"},
+  "Ranger 2.0 Turbo XLT 4x2 AT":{seats:5,economy:"~13 km/L",engine:"2.0L turbo-diesel (1996cc)",power:"168 hp / 405 Nm",transmission:"6AT",warranty:"5 yrs / 150,000 km"},
+  "Triton GLX 2WD AT":{seats:5,economy:"~13 km/L",engine:"2.4L turbo-diesel (2442cc)",power:"180 hp / 430 Nm",transmission:"6AT",warranty:"3 yrs / 100,000 km"},
+  "Hilux 2.4 G DSL 4x2 AT":{seats:5,economy:"~12 km/L",engine:"2.4L turbo-diesel (2393cc)",power:"148 hp / 400 Nm",transmission:"6AT",warranty:"3 yrs / 100,000 km (+2 yrs loyalty)"},
+};
+/* ---- SPREADSHEET EXPORT (CSV + real .xlsx, no dependencies) ---- */
+const CAR_EXPORT_COLS = [
+  {key:"Fit",label:"Fit /100"},{key:"Archetype",label:"Category"},{key:"Brand",label:"Brand"},
+  {key:"Model",label:"Model / variant"},{key:"Type",label:"Type"},
+  {key:"Price",label:"Price (SRP)"},{key:"PricePHP",label:"Price (PHP)"},
+  {key:"Monthly",label:"Monthly"},{key:"MonthlyPHP",label:"Monthly (PHP)"},
+  {key:"PctSavings",label:"% of ₱120k savings"},{key:"Affordability",label:"Affordability"},
+  {key:"Seats",label:"Seats"},{key:"Economy",label:"Fuel economy"},{key:"Engine",label:"Engine"},
+  {key:"Power",label:"Power"},{key:"Transmission",label:"Transmission"},{key:"Warranty",label:"Warranty"},
+  {key:"Dealer",label:"Nearest dealer"},{key:"Maps",label:"Map link"},{key:"Photo",label:"Photo URL"},
+  {key:"Notes",label:"Notes"},
+];
+const CAR_NUM_COLS = new Set(["Fit","PricePHP","MonthlyPHP","PctSavings"]);
+function carExportRows(){
+  const rank={}; ranked(CARS,state.weights.car).forEach((e,i)=>{rank[e.c.id]={fit:Math.round(e.sc)};});
+  const out=[];
+  CARS.forEach(c=>{
+    const arr=CARMODELS[c.id], fit=(rank[c.id]||{}).fit;
+    if(!arr||!arr.length){ out.push({Fit:fit,Archetype:c.name,Brand:"",Model:"(no purchase — keep commuting)",Type:"",Price:"",PricePHP:"",Monthly:"",MonthlyPHP:"",PctSavings:"",Affordability:"",Seats:"",Economy:"",Engine:"",Power:"",Transmission:"",Warranty:"",Dealer:"",Maps:"",Photo:"",Notes:c.why}); return; }
+    arr.forEach(re=>{const md=CARMEDIA[re.model]||{},sp=CARSPECS[re.model]||{},b=affordBand(re.monthlyP);
+      out.push({Fit:fit,Archetype:c.name,Brand:re.brand,Model:re.model,Type:re.type,Price:re.price,PricePHP:re.priceP,Monthly:re.monthly,MonthlyPHP:re.monthlyP,PctSavings:b.pct,Affordability:b.lbl,Seats:sp.seats||"",Economy:sp.economy||"",Engine:sp.engine||"",Power:sp.power||"",Transmission:sp.transmission||"",Warranty:sp.warranty||"",Dealer:md.dealer||"",Maps:md.maps||"",Photo:md.img||"",Notes:re.note});
+    });
+  });
+  return out;
+}
+function dl(name,blobOrStr,mime){const b=blobOrStr instanceof Blob?blobOrStr:new Blob([blobOrStr],{type:mime});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);}
+function exportCarsCSV(){
+  const rows=carExportRows(), C=CAR_EXPORT_COLS;
+  const esc=v=>{v=(v==null?"":""+v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const csv="﻿"+C.map(c=>esc(c.label)).join(",")+"\n"+rows.map(r=>C.map(c=>esc(r[c.key])).join(",")).join("\n");
+  dl("compass-cars.csv",csv,"text/csv;charset=utf-8"); flash("CSV exported");
+}
+// minimal store-only ZIP → valid .xlsx, no libraries
+function _crc32(b){let t=_crc32._t;if(!t){t=_crc32._t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}}let crc=-1;for(let i=0;i<b.length;i++)crc=(crc>>>8)^t[(crc^b[i])&255];return (crc^-1)>>>0;}
+function _zip(files){const u16=n=>[n&255,(n>>>8)&255],u32=n=>[n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255];
+  let parts=[],cd=[],off=0;
+  files.forEach(f=>{const nm=new TextEncoder().encode(f.name),d=f.data,crc=_crc32(d);
+    const lh=[].concat(u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(d.length),u32(d.length),u16(nm.length),u16(0));
+    parts.push(new Uint8Array(lh),nm,d);
+    cd.push(new Uint8Array([].concat(u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(d.length),u32(d.length),u16(nm.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off))),nm);
+    off+=lh.length+nm.length+d.length;});
+  let cds=0;cd.forEach(p=>cds+=p.length);
+  const eocd=new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cds),u32(off),u16(0)));
+  const all=[...parts,...cd,eocd];let tot=0;all.forEach(p=>tot+=p.length);
+  const out=new Uint8Array(tot);let p=0;all.forEach(b=>{out.set(b,p);p+=b.length;});return out;}
+function exportCarsXLSX(){
+  const rows=carExportRows(), C=CAR_EXPORT_COLS, enc=new TextEncoder();
+  const xe=s=>(""+s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const colL=i=>{let s="";i++;while(i>0){i--;s=String.fromCharCode(65+i%26)+s;i=Math.floor(i/26);}return s;};
+  const matrix=[C.map(c=>c.label),...rows.map(r=>C.map(c=>r[c.key]))];
+  let sd="";
+  matrix.forEach((row,ri)=>{sd+=`<row r="${ri+1}">`;
+    row.forEach((val,ci)=>{const ref=colL(ci)+(ri+1),key=C[ci].key;
+      const num=ri>0&&CAR_NUM_COLS.has(key)&&val!==""&&val!=null&&!isNaN(val);
+      sd+=num?`<c r="${ref}"><v>${val}</v></c>`:`<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${xe(val==null?"":val)}</t></is></c>`;});
+    sd+="</row>";});
+  const sheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${sd}</sheetData></worksheet>`;
+  const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`;
+  const rels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
+  const wb=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Cars" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+  const wbr=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`;
+  const blob=new Blob([_zip([
+    {name:"[Content_Types].xml",data:enc.encode(ct)},
+    {name:"_rels/.rels",data:enc.encode(rels)},
+    {name:"xl/workbook.xml",data:enc.encode(wb)},
+    {name:"xl/_rels/workbook.xml.rels",data:enc.encode(wbr)},
+    {name:"xl/worksheets/sheet1.xml",data:enc.encode(sheet)},
+  ])],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  dl("compass-cars.xlsx",blob); flash("Excel (.xlsx) exported");
+}
 function carLine(id){
   if(id==='none') return `<div style="font-size:12px;color:var(--mut);margin-top:3px">🚆 No purchase · save the ₱15–29k/mo + ownership costs</div>`;
   const arr=CARMODELS[id]; if(!arr||!arr.length) return "";
