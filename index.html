@@ -62,6 +62,8 @@
   .minibar{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden}
   .minibar>i{display:block;height:100%;border-radius:99px;background:var(--acc)}
   .rank.work .minibar>i{background:#ff9f43}
+  .rank.car .bigbar>i{background:linear-gradient(90deg,#3fb950,#46c98b)}
+  .rank.car .minibar>i{background:#3fb950}
   /* sliders */
   .wrow{display:grid;grid-template-columns:140px 1fr 42px;gap:12px;align-items:center;margin:9px 0}
   .wrow label{font-size:13.5px;color:var(--txt)}
@@ -153,6 +155,16 @@
     <div id="workList"></div>
   </section>
 
+  <!-- CARS -->
+  <section class="view" data-v="cars">
+    <div class="card">
+      <h2>🚗 Car to buy</h2>
+      <p class="muted">Six options — from a value sedan to a beach-trip pickup, plus the honest "no car" baseline — scored against your needs (Metro Manila traffic + weekend trips, cost-conscious, family). Tap one for real 2026 PH models, prices, and monthly amortization.</p>
+      <div class="row"><span class="dim" style="font-size:12px">Weighting profile:</span><span id="carProfileTag" class="pill"></span><button class="btn sm" onclick="go('priorities')">Adjust priorities</button></div>
+    </div>
+    <div id="carList"></div>
+  </section>
+
   <!-- PRIORITIES -->
   <section class="view" data-v="priorities">
     <div class="card">
@@ -174,6 +186,10 @@
       <div class="card">
         <h3 style="color:#ff9f43">💼 Working priorities</h3>
         <div id="workWeights"></div>
+      </div>
+      <div class="card">
+        <h3 style="color:#3fb950">🚗 Car priorities</h3>
+        <div id="carWeights"></div>
       </div>
     </div>
   </section>
@@ -570,24 +586,120 @@ function jobsPanel(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
     <div class="note" style="margin-top:8px"><b style="color:var(--good)">✓ Live posting</b> opens that exact open role (pulled from the employer's ATS on ${SNAPSHOT}); <b style="color:var(--mut)">🔎 Search</b> = no specific role open right now, opens the employer's filtered careers page; <b style="color:var(--acc)">▣ Program</b> = apply to a program/board, not one posting. Postings rotate — if a link 404s, it filled; use the careers page. ₱ = 2026 conversion (USD ₱61 · SGD ₱47 · AUD ₱42); “Live in …” = single-pro cost of living; net = low-end pay − expenses.${baseNote}</div>
   </div>`;}
 
+/* ---- CAR TO BUY: archetypes scored vs your needs; each holds real 2026 PH models ---- */
+const CAR_CRIT = [
+  ["afford","Affordability (price &amp; monthly)"],
+  ["running","Fuel economy &amp; running cost"],
+  ["reliability","Reliability &amp; resale value"],
+  ["space","Space &amp; family fit"],
+  ["trips","Road-trip / provincial capability"],
+  ["city","City &amp; traffic ease"],
+  ["features","Features &amp; comfort"],
+];
+const CARS = [
+  {id:"crossover",name:"Compact crossover SUV",sub:"The do-everything Metro Manila pick",emoji:"🚙",
+   s:{afford:62,running:72,reliability:80,space:75,trips:78,city:80,features:82},
+   why:"The Metro Manila sweet spot: car-like to drive and park, higher seating + clearance for Tagaytay/Batangas runs, strong resale. Pricier than a sedan, but the do-everything choice for your life."},
+  {id:"sedan",name:"Subcompact sedan",sub:"The rational value commuter",emoji:"🚗",
+   s:{afford:88,running:85,reliability:85,space:60,trips:58,city:88,features:65},
+   why:"Cheapest to buy and run, bulletproof resale (Vios/City), effortless in EDSA traffic and parking. The rational first car — just tight on space and low for rough provincial roads."},
+  {id:"mpv",name:"7-seat MPV",sub:"The Filipino-family hauler",emoji:"🚐",
+   s:{afford:70,running:72,reliability:82,space:95,trips:80,city:68,features:68},
+   why:"7 seats for INC church + extended family, great for Quezon/Batangas trips, strong resale. The classic family choice — just bulkier in tight city spots and less premium to drive."},
+  {id:"hybrid",name:"Hybrid / EV",sub:"Lowest running cost · future-proof",emoji:"🔋",
+   s:{afford:48,running:96,reliability:74,space:72,trips:62,city:85,features:88},
+   why:"Slashes fuel cost in stop-go traffic and fits your tech-forward streak. Higher sticker price and (for EVs) charging + resale uncertainty are the catch — a self-charging hybrid is the safer version of this bet."},
+  {id:"pickup",name:"Pickup / adventure",sub:"Beach &amp; province, rugged",emoji:"🛻",
+   s:{afford:45,running:60,reliability:85,space:80,trips:95,city:48,features:72},
+   why:"Unstoppable for Zambales/Palawan beach runs and rough roads, diesel-tough, holds value. But it's big, thirsty in city traffic and a pain to park in Metro Manila — overkill unless trips dominate."},
+  {id:"none",name:"Keep commuting (no car)",sub:"Grab/transit + rent for trips",emoji:"🚆",
+   s:{afford:98,running:90,reliability:70,space:40,trips:35,city:75,features:30},
+   why:"The honest baseline: no ₱15–29k/mo amortization, no insurance/registration/fuel/parking. Your data already shows a Grab-heavy commute. Best if you're mostly BGC/Makati-based and rent a car for the occasional trip."},
+];
+/* Real 2026 PH models per archetype (researched by 5 subagents). Financing: 20% down, 80% financed,
+   5-yr (60-mo) @ 9% p.a. ≈ ₱20,758/mo per ₱1M financed. */
+const CARMODELS = {
+  sedan:[
+    {brand:"Toyota",model:"Vios 1.3 XLE CVT",type:"Subcompact sedan · 1.3L CVT",price:"₱908k",priceP:908000,monthly:"₱15.1k/mo",monthlyP:15079,note:"~19–21 km/L; PH's #1 sedan — bulletproof reliability + best resale; parts/service everywhere near Las Piñas."},
+    {brand:"Suzuki",model:"Dzire Hybrid GLX CVT",type:"Subcompact sedan · 1.2L mild-hybrid",price:"₱998k",priceP:998000,monthly:"₱16.6k/mo",monthlyP:16573,note:"~23–26 km/L (class-leading); cheapest to run in heavy traffic — best economy for a cost-conscious daily."},
+    {brand:"Honda",model:"City 1.5 V CVT (Sensing)",type:"Subcompact sedan · 1.5L CVT",price:"₱1.08M",priceP:1083000,monthly:"₱18.0k/mo",monthlyP:17985,note:"~18–20 km/L; roomiest cabin + Honda Sensing safety — refined highway runs to Tagaytay/Batangas."}],
+  crossover:[
+    {brand:"Ford",model:"Territory 1.5 Titanium EcoBoost",type:"Compact crossover · 1.5L turbo",price:"₱1.34M",priceP:1335000,monthly:"₱22.2k/mo",monthlyP:22169,note:"~15 km/L; biggest tech-loaded cabin, most space-per-peso, cheapest monthly here — resale trails the Japanese."},
+    {brand:"Honda",model:"HR-V 1.5 S CVT (Sensing)",type:"Compact crossover · 1.5L",price:"₱1.45M",priceP:1450000,monthly:"₱24.1k/mo",monthlyP:24079,note:"~17 km/L, ~196mm clearance (highest here) for rough beach/highland roads; versatile cabin, strong resale."},
+    {brand:"Toyota",model:"Corolla Cross 1.8 G HEV",type:"Compact crossover · 1.8L hybrid",price:"₱1.51M",priceP:1514000,monthly:"₱25.1k/mo",monthlyP:25142,note:"~23 km/L hybrid, roomy 5-seater; Toyota's resale + reliability make it the safe do-everything default."}],
+  mpv:[
+    {brand:"Suzuki",model:"Ertiga Hybrid GL AT",type:"7-seat MPV · 1.5L mild-hybrid",price:"₱1.13M",priceP:1128000,monthly:"₱18.7k/mo",monthlyP:18732,note:"Cheapest to buy & run, ~18–20 km/L; right-sized 7-seater for weekly church + occasional out-of-town."},
+    {brand:"Mitsubishi",model:"Xpander GLS AT",type:"7-seat MPV · 1.5L gas",price:"₱1.26M",priceP:1259000,monthly:"₱20.9k/mo",monthlyP:20908,note:"Best-selling family MPV; flexible 7-seat folding, big cargo, ~14 km/L, strong dealer network + resale."},
+    {brand:"Toyota",model:"Innova 2.8 J Diesel MT",type:"7-seat MPV · 2.8L turbo-diesel",price:"₱1.27M",priceP:1267000,monthly:"₱21.0k/mo",monthlyP:21041,note:"Body-on-frame durability + diesel torque for loaded provincial hauls; PH gold standard for resale (note: manual)."}],
+  hybrid:[
+    {brand:"Nissan",model:"Kicks e-POWER VE",type:"Series-hybrid crossover",price:"₱1.28M",priceP:1279000,monthly:"₱21.2k/mo",monthlyP:21240,note:"~19–23 km/L, EV-like torque but never plugs in (just fill up — zero range anxiety). Lowest-risk fuel-saver here."},
+    {brand:"BYD",model:"Dolphin (44.9 kWh)",type:"Full EV hatchback · ~405 km",price:"₱1.40M",priceP:1398000,monthly:"₱23.2k/mo",monthlyP:23216,note:"Running cost ~₱2–3/km vs ~₱5–6 petrol. CAVEAT: needs home/condo charging (a possible blocker) + EV resale unproven.",flag:"⚠ Needs home charging · EV resale unproven"},
+    {brand:"Toyota",model:"Corolla Cross 1.8 G HEV",type:"Self-charging hybrid crossover",price:"₱1.51M",priceP:1514000,monthly:"₱25.1k/mo",monthlyP:25142,note:"~19–27 km/L self-charging (no plug); best resale/reliability of the trio, dense service network, battery under warranty.",flag:"✓ No charging needed (self-charging hybrid)"}],
+  pickup:[
+    {brand:"Ford",model:"Ranger 2.0 Turbo XLT 4x2 AT",type:"Midsize pickup · 2.0L diesel",price:"₱1.69M",priceP:1694000,monthly:"₱28.1k/mo",monthlyP:28131,note:"168hp single-turbo diesel sips fuel on long hauls; high clearance + bed for sand/gravel/beach gear; best cabin tech."},
+    {brand:"Mitsubishi",model:"Triton GLX 2WD AT",type:"Midsize pickup · 2.4L diesel",price:"₱1.74M",priceP:1735000,monthly:"₱28.8k/mo",monthlyP:28812,note:"Most powerful diesel here (181hp/430Nm) for loaded island trips; comfy ride, good warranty, wide service reach."},
+    {brand:"Toyota",model:"Hilux 2.4 G DSL 4x2 AT",type:"Midsize pickup · 2.4L diesel",price:"₱1.74M",priceP:1740000,monthly:"₱28.9k/mo",monthlyP:28895,note:"Legendary durability + cheapest-to-maintain network; frugal 2.4 diesel, top resale — the cost-conscious workhorse.",flag:"ⓘ 4x4 variant adds true beach-sand capability"}],
+};
+function carLine(id){
+  if(id==='none') return `<div style="font-size:12px;color:var(--mut);margin-top:3px">🚆 No purchase · save the ₱15–29k/mo + ownership costs</div>`;
+  const arr=CARMODELS[id]; if(!arr||!arr.length) return "";
+  const prices=arr.map(r=>r.priceP), mo=arr.map(r=>r.monthlyP);
+  const range=fmtM(Math.min(...prices))+'–'+fmtM(Math.max(...prices));
+  return `<div style="font-size:12px;color:var(--mut);margin-top:3px">🚗 ${arr.length} models · <b style="color:var(--txt)">${range}</b> · from ₱${Math.round(Math.min(...mo)/1000)}k/mo</div>`;}
+function carPanel(id){
+  if(id==='none'){
+    return `<div style="margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px">
+      <div class="src" style="color:#3fb950">🚆 The no-car math</div>
+      <div class="muted" style="font-size:13px;margin-top:4px">Skipping a car avoids a <b style="color:var(--txt)">~₱15–29k/mo</b> amortization <i>plus</i> ownership: fuel ₱55–70k, insurance ₱18–28k, registration ₱3–5k, maintenance ₱8–22k per year (₱90–130k/yr total, before parking ₱24–60k).</div>
+      <div class="muted" style="font-size:12.5px;margin-top:8px">Grab + the occasional car rental for trips is often cheaper than ownership <b>if you're mostly in BGC/Makati</b>. It stops winning once you're doing frequent Tagaytay/Batangas/Zambales runs — then a crossover pays for itself in freedom.</div>
+      <div class="note" style="margin-top:8px">Ownership figures are 2026 Metro Manila ballparks; your mileage varies.</div>
+    </div>`;
+  }
+  const arr=CARMODELS[id]; if(!arr||!arr.length) return "";
+  const rows=arr.map(re=>{const b=affordBand(re.monthlyP);
+    return `<div style="border-top:1px solid var(--line);padding:9px 0">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+        <div style="min-width:0"><b>${re.brand} ${re.model}</b>
+          <div class="dim" style="font-size:12px;margin-top:1px">${re.type}</div></div>
+        <div style="text-align:right;white-space:nowrap"><div style="font-size:16px;font-weight:800">${re.price}</div>
+          <div style="font-size:12px;color:#3fb950">${re.monthly}</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:10px;margin-top:4px;align-items:center">
+        <div class="muted" style="font-size:12px">${re.note}</div>
+        <div style="font-size:12px;font-weight:700;white-space:nowrap;color:${b.col}">${b.pct}% ${b.lbl}</div>
+      </div>
+      ${re.flag?`<div style="font-size:11.5px;margin-top:3px;color:${flagCol(re.flag)}">${re.flag}</div>`:''}
+    </div>`;}).join("");
+  return `<div style="margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px 14px 12px">
+    <div class="src" style="color:#3fb950;padding-top:8px">🚗 ${arr.length} models · brand · price · monthly</div>
+    ${rows}
+    <div class="note" style="margin-top:9px">Monthly = 20% DP · 80% loan · 5-yr @ 9% (≈₱20,758/mo per ₱1M financed; dealer promos run lower). The “% vs ₱120k/mo savings” badge shows how heavy the amortization is — and it excludes ~₱90–130k/yr running costs. 2026 SRPs, estimates.</div>
+  </div>`;}
+
 /* ---- default weights (seeded from his profile) ---- */
 const DEFAULTS = {
   live:{career:20,cost:15,family:20,climate:12,safety:10,lifestyle:13,ease:10},
   work:{comp:22,growth:20,remote:18,stability:12,fit:10,goal:12,wlb:6},
+  car:{afford:20,running:18,reliability:16,space:12,trips:14,city:12,features:8},
 };
 const PRESETS = {
-  rooted:{live:{career:14,cost:18,family:30,climate:8,safety:10,lifestyle:8,ease:12},work:{comp:14,growth:12,remote:18,stability:26,fit:18,goal:6,wlb:6}},
-  ambition:{live:{career:32,cost:8,family:8,climate:6,safety:14,lifestyle:14,ease:8},work:{comp:30,growth:28,remote:10,stability:6,fit:8,goal:14,wlb:4}},
-  balance:{live:{career:16,cost:15,family:16,climate:14,safety:13,lifestyle:13,ease:13},work:{comp:16,growth:16,remote:15,stability:14,fit:13,goal:14,wlb:12}},
-  lifestyle:{live:{career:10,cost:14,family:16,climate:26,safety:10,lifestyle:18,ease:6},work:{comp:10,growth:12,remote:24,stability:10,fit:10,goal:12,wlb:22}},
+  rooted:{live:{career:14,cost:18,family:30,climate:8,safety:10,lifestyle:8,ease:12},work:{comp:14,growth:12,remote:18,stability:26,fit:18,goal:6,wlb:6},car:{afford:28,running:20,reliability:18,space:12,trips:8,city:10,features:4}},
+  ambition:{live:{career:32,cost:8,family:8,climate:6,safety:14,lifestyle:14,ease:8},work:{comp:30,growth:28,remote:10,stability:6,fit:8,goal:14,wlb:4},car:{afford:10,running:12,reliability:14,space:10,trips:12,city:16,features:26}},
+  balance:{live:{career:16,cost:15,family:16,climate:14,safety:13,lifestyle:13,ease:13},work:{comp:16,growth:16,remote:15,stability:14,fit:13,goal:14,wlb:12},car:{afford:15,running:15,reliability:15,space:14,trips:14,city:14,features:13}},
+  lifestyle:{live:{career:10,cost:14,family:16,climate:26,safety:10,lifestyle:18,ease:6},work:{comp:10,growth:12,remote:24,stability:10,fit:10,goal:12,wlb:22},car:{afford:10,running:14,reliability:12,space:14,trips:26,city:8,features:16}},
 };
 
 /* ============================ STATE ============================ */
 const LS="compass.v1";
 let state = load();
 function load(){
-  try{const s=JSON.parse(localStorage.getItem(LS));if(s&&s.weights)return s;}catch(e){}
-  return {weights:clone(DEFAULTS), note:"", openLive:{}, openWork:{}};
+  let s=null;
+  try{s=JSON.parse(localStorage.getItem(LS));}catch(e){}
+  if(!s||!s.weights) s={weights:clone(DEFAULTS), note:"", openLive:{}, openWork:{}};
+  // migrate older saved state that predates the Car tab
+  if(!s.weights.car) s.weights.car=clone(DEFAULTS.car);
+  if(!s.openCar) s.openCar={};
+  return s;
 }
 function save(){localStorage.setItem(LS,JSON.stringify(state));}
 function clone(o){return JSON.parse(JSON.stringify(o));}
@@ -603,7 +715,7 @@ function ranked(list, weights){
 }
 
 /* ============================ RENDER ============================ */
-const TABS=[["overview","Overview"],["live","🏠 Where to live"],["work","💼 Where to work"],["priorities","🎚️ Priorities"],["profile","🧬 Profile"],["data","🔎 Data &amp; method"]];
+const TABS=[["overview","Overview"],["live","🏠 Where to live"],["work","💼 Where to work"],["cars","🚗 Car to buy"],["priorities","🎚️ Priorities"],["profile","🧬 Profile"],["data","🔎 Data &amp; method"]];
 function buildTabs(){
   document.getElementById("tabs").innerHTML = TABS.map(([k,l],i)=>
     `<div class="tab${i===0?' active':''}" data-t="${k}" onclick="go('${k}')">${l}</div>`).join("");
@@ -622,26 +734,26 @@ function rankCardHTML(entry, idx, kind, crit, openMap){
     const v=c.s[k]||0;
     return `<div class="cl">${lbl}</div><div class="minibar"><i style="width:${v}%"></i></div><div class="cv">${v}</div>`;
   }).join("");
-  return `<div class="rank ${kind==='work'?'work':''} ${isTop?'top':''} ${open?'open':''}" id="rk-${kind}-${c.id}">
+  return `<div class="rank ${kind==='work'?'work':''}${kind==='car'?'car':''} ${isTop?'top':''} ${open?'open':''}" id="rk-${kind}-${c.id}">
     <div class="hd" onclick="toggle('${kind}','${c.id}')">
       <div class="num">${idx+1}</div>
       <div style="font-size:22px">${c.emoji}</div>
       <div class="nm"><b>${c.name}</b><div class="sub2">${c.sub}</div>
-        ${kind==='live'?propertyLine(c.id):''}${kind==='work'?jobsLine(c.id):''}
+        ${kind==='live'?propertyLine(c.id):''}${kind==='work'?jobsLine(c.id):''}${kind==='car'?carLine(c.id):''}
         <div class="bigbar"><i style="width:${sc}%"></i></div>
       </div>
       <div><div class="score">${sc.toFixed(0)}</div><div class="scoreLbl">fit / 100</div></div>
     </div>
     <div class="bd">
       <div class="why">${c.why}</div>
-      ${kind==='live'?propertyPanel(c.id):''}${kind==='work'?jobsPanel(c.id):''}
+      ${kind==='live'?propertyPanel(c.id):''}${kind==='work'?jobsPanel(c.id):''}${kind==='car'?carPanel(c.id):''}
       <div class="crit">${critRows}</div>
       <div class="note">Numbers are seeded from your data; the <b>fit</b> score reweights them by your priorities.</div>
     </div>
   </div>`;
 }
 function toggle(kind,id){
-  const m = kind==='work'?state.openWork:state.openLive;
+  const m = kind==='work'?state.openWork:(kind==='car'?state.openCar:state.openLive);
   m[id]=!m[id]; save();
   document.getElementById(`rk-${kind}-${id}`).classList.toggle("open",m[id]);
 }
@@ -649,26 +761,29 @@ function toggle(kind,id){
 function renderLists(){
   const rl=ranked(LIVE,state.weights.live);
   const rw=ranked(WORK,state.weights.work);
+  const rcar=ranked(CARS,state.weights.car);
   document.getElementById("liveList").innerHTML = rl.map((e,i)=>rankCardHTML(e,i,'live',LIVE_CRIT,state.openLive)).join("");
   document.getElementById("workList").innerHTML = rw.map((e,i)=>rankCardHTML(e,i,'work',WORK_CRIT,state.openWork)).join("");
+  document.getElementById("carList").innerHTML = rcar.map((e,i)=>rankCardHTML(e,i,'car',CAR_CRIT,state.openCar)).join("");
 
   // overview
-  const topL=rl[0], topW=rw[0];
+  const topL=rl[0], topW=rw[0], topC=rcar[0];
   document.getElementById("topPicks").innerHTML =
-    pickCard("🏠 Live","var(--live)",topL,"live")+pickCard("💼 Work","#ff9f43",topW,"work");
+    pickCard("🏠 Live","var(--live)",topL,"live")+pickCard("💼 Work","#ff9f43",topW,"work")+pickCard("🚗 Car","#3fb950",topC,"car");
   document.getElementById("oneLiner").innerHTML =
-    `On your current priorities, Compass points you to <b style="color:var(--live)">${topL.c.name}</b> as a base and <b style="color:#ff9f43">${topW.c.name}</b> as a path — `+
+    `On your current priorities, Compass points you to <b style="color:var(--live)">${topL.c.name}</b> as a base, <b style="color:#ff9f43">${topW.c.name}</b> as a path, and a <b style="color:#3fb950">${topC.c.name}</b> for wheels — `+
     readSynopsis(topL.c.id, topW.c.id);
   document.getElementById("overviewKpi").innerHTML =
     `<div class="b"><div class="n">${topL.sc.toFixed(0)}</div><div class="l">Top place fit</div></div>`+
     `<div class="b"><div class="n">${topW.sc.toFixed(0)}</div><div class="l">Top path fit</div></div>`+
-    `<div class="b"><div class="n">8 / 6</div><div class="l">Places / paths scored</div></div>`+
-    `<div class="b"><div class="n">5</div><div class="l">Data sources mined</div></div>`;
+    `<div class="b"><div class="n">${topC.sc.toFixed(0)}</div><div class="l">Top car fit</div></div>`+
+    `<div class="b"><div class="n">${LIVE.length}/${WORK.length}/${CARS.length}</div><div class="l">Places / paths / cars</div></div>`;
   document.getElementById("miniLive").innerHTML = rl.slice(0,3).map((e,i)=>miniRow(e,i)).join("");
   document.getElementById("miniWork").innerHTML = rw.slice(0,3).map((e,i)=>miniRow(e,i,true)).join("");
 
   document.getElementById("liveProfileTag").textContent = profileName();
   document.getElementById("workProfileTag").textContent = profileName();
+  const cpt=document.getElementById("carProfileTag"); if(cpt) cpt.textContent = profileName();
 }
 function pickCard(tag,col,e,kind){
   return `<div class="card" style="margin:8px 0;border-color:${col}33;cursor:pointer" onclick="go('${kind}')">
@@ -677,7 +792,7 @@ function pickCard(tag,col,e,kind){
     <div class="muted" style="font-size:13px">${e.c.sub}</div>
     <div class="bigbar" style="margin-top:10px"><i style="width:${e.sc}%;background:${col}"></i></div>
     <div class="dim" style="font-size:11px;margin-top:4px">${e.sc.toFixed(0)} / 100 fit</div>
-    ${kind==='live'?propertyLine(e.c.id):(kind==='work'?jobsLine(e.c.id):'')}
+    ${kind==='live'?propertyLine(e.c.id):(kind==='work'?jobsLine(e.c.id):(kind==='car'?carLine(e.c.id):''))}
   </div>`;
 }
 function miniRow(e,i,work){
@@ -701,6 +816,7 @@ function readSynopsis(liveId, workId){
 function renderWeights(){
   document.getElementById("liveWeights").innerHTML = LIVE_CRIT.map(([k,l])=>wrow('live',k,l)).join("");
   document.getElementById("workWeights").innerHTML = WORK_CRIT.map(([k,l])=>wrow('work',k,l)).join("");
+  const cw=document.getElementById("carWeights"); if(cw) cw.innerHTML = CAR_CRIT.map(([k,l])=>wrow('car',k,l)).join("");
 }
 function wrow(kind,k,l){
   const v=state.weights[kind][k];
