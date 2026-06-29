@@ -471,26 +471,74 @@ const WORKJOBS = {
     {title:"Software Engineer — LLM Evaluation",company:"Mercor",loc:"Remote · Contract",pay:"$50–100/hr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=LLM%20Evaluation%20Engineer&f_AL=true&f_WT=2&f_JT=C",note:"Your Python-for-QA + AI workflows map cleanly to eval guidelines; async 10–40 hrs/wk."},
     {title:"Freelance QA / Test Automation Consultant",company:"Toptal",loc:"Remote · Contract",pay:"$60–200+/hr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=QA%20Consultant%20Test%20Automation&f_AL=true&f_WT=2&f_JT=C",note:"Premium network; your profile clears the senior bar, and you set your own rate."}]},
 };
+/* Per-role PHP salary conversion + cost-of-living location, keyed by company.
+   FX (2026, researched by 5 subagents): USD ₱61 · SGD ₱47 · AUD ₱42.
+   payPhp = display string ("" if already PHP / "equity-based"); payLoP = low-end monthly ₱ (null if equity); costLoc = expenses key. */
+const JOBMETA = {
+  "Accenture Philippines":{payPhp:"",costLoc:"manila",payLoP:90000},
+  "Cognizant":{payPhp:"",costLoc:"manila",payLoP:110000},
+  "Finastra":{payPhp:"",costLoc:"manila",payLoP:80000},
+  "Viventis (BGC client)":{payPhp:"",costLoc:"manila",payLoP:120000},
+  "Capgemini":{payPhp:"",costLoc:"manila",payLoP:100000},
+  "NCS Philippines":{payPhp:"",costLoc:"manila",payLoP:95000},
+  "Zapier":{payPhp:"≈₱9.2M–12.2M/yr",costLoc:"manila",payLoP:762500},
+  "GitLab":{payPhp:"≈₱10.4M–14.8M/yr",costLoc:"manila",payLoP:864167},
+  "Automattic":{payPhp:"≈₱5.5M–12.2M+/yr",costLoc:"manila",payLoP:457500},
+  "Anthropic":{payPhp:"≈₱12.2M–18.3M+/yr",costLoc:"manila",payLoP:1016667},
+  "Grab":{payPhp:"≈₱6.1M–8.7M/yr",costLoc:"singapore",payLoP:509167},
+  "ByteDance / TikTok":{payPhp:"≈₱6.6M–10.8M/yr",costLoc:"singapore",payLoP:548333},
+  "Infosys (DBS/GovTech vendor)":{payPhp:"≈₱4.2M–7.1M/yr",costLoc:"singapore",payLoP:352500},
+  "Atlassian / Canva":{payPhp:"≈₱5.9M–9.2M/yr",costLoc:"sydney",payLoP:490000},
+  "Antler":{payPhp:"equity-based",costLoc:"manila",payLoP:null},
+  "FutureSight":{payPhp:"equity-based",costLoc:"manila",payLoP:null},
+  "YC-backed / stealth startups":{payPhp:"≈₱9.2M–13.4M/yr + equity",costLoc:"manila",payLoP:762500},
+  "TEKsystems":{payPhp:"≈₱2.7k–4.0k/hr",costLoc:"manila",payLoP:439200},
+  "Robert Half":{payPhp:"≈₱3.1k–4.3k/hr",costLoc:"manila",payLoP:488000},
+  "Mercor":{payPhp:"≈₱3.1k–6.1k/hr",costLoc:"manila",payLoP:488000},
+  "Toptal":{payPhp:"≈₱3.7k–12.2k+/hr",costLoc:"manila",payLoP:585600},
+};
+/* Monthly cost of living for a single professional (researched by 5 subagents, 2026). totalP = ₱/mo. */
+const EXPENSES = {
+  manila:{city:"Metro Manila (BGC/Makati)",totalP:99900,rent:55000,food:21000,transport:8000,util:7900,localTotal:"₱99,900/mo"},
+  singapore:{city:"Singapore",totalP:239700,rent:150400,food:47000,transport:5640,util:13160,localTotal:"S$5,100/mo (~₱240k)"},
+  sydney:{city:"Sydney, Australia",totalP:189100,rent:117600,food:23100,transport:9240,util:18186,localTotal:"A$4,503/mo (~₱189k)"},
+  cebu:{city:"Cebu City",totalP:57300,localTotal:"₱57,300/mo"},
+  bangkok:{city:"Bangkok",totalP:65620,localTotal:"฿38,600/mo (~₱65.6k)"},
+};
+function kPhp(v){const a=Math.abs(v);return '₱'+(a>=1e6?(v/1e6).toFixed(1)+'M':Math.round(v/1e3)+'k');}
 function jobsLine(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
   const uniq=[...new Set(d.jobs.map(j=>j.company.split(' (')[0].split(' / ')[0]))];
   return `<div style="font-size:12px;color:var(--mut);margin-top:3px">💼 ${d.jobs.length} roles · ${uniq.slice(0,3).join(' · ')}${uniq.length>3?' +'+(uniq.length-3):''}</div>`;}
 function jobsPanel(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
+  let remote=false;
   const rows=d.jobs.map(j=>{
     const tag=j.easy?`<span style="color:var(--good)">Easy Apply ↗</span>`:`<span style="color:var(--warn)">External ATS ↗</span>`;
+    const m=JOBMETA[j.company]||{}; const exp=EXPENSES[m.costLoc];
+    if(/Remote/i.test(j.loc)) remote=true;
+    const phpLine=m.payPhp?`<div class="dim" style="font-size:11.5px;margin-top:1px">${m.payPhp}</div>`:'';
+    let costLine='';
+    if(exp){
+      let net='';
+      if(m.payLoP!=null){const s=m.payLoP-exp.totalP;const col=s<=0?'var(--bad)':(s<50000?'var(--warn)':'var(--good)');
+        net=` · net <b style="color:${col}">${s>=0?'+':'−'}${kPhp(Math.abs(s))}/mo</b>`;}
+      costLine=`<div class="note" style="margin-top:3px">🧾 Live in ${exp.city}: ~${kPhp(exp.totalP)}/mo${net}</div>`;
+    }
     return `<div style="border-top:1px solid var(--line);padding:9px 0">
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
         <div style="min-width:0"><b>${j.title}</b> <span class="muted" style="font-size:12.5px">@ ${j.company}</span>
           <div class="dim" style="font-size:12px;margin-top:1px">${j.loc}</div></div>
-        <div style="text-align:right;white-space:nowrap"><div style="font-size:14px;font-weight:800">${j.pay}</div>
+        <div style="text-align:right;white-space:nowrap"><div style="font-size:14px;font-weight:800">${j.pay}</div>${phpLine}
           <a href="${j.url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;text-decoration:none">${tag}</a></div>
       </div>
       <div class="muted" style="font-size:12px;margin-top:4px">${j.note}</div>
+      ${costLine}
     </div>`;}).join("");
+  const baseNote=remote?` Remote roles are based in PH (Manila ~₱100k/mo) — or go cheaper: Cebu ~₱57k or Bangkok ~₱66k/mo for a bigger surplus.`:'';
   return `<div style="margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px 14px 12px">
-    <div class="src" style="color:#ff9f43;padding-top:8px">💼 ${d.jobs.length} LinkedIn roles · title · pay · apply</div>
+    <div class="src" style="color:#ff9f43;padding-top:8px">💼 ${d.jobs.length} LinkedIn roles · pay · ₱ · cost of living</div>
     ${rows}
     <a href="${d.cat}" target="_blank" rel="noopener" class="btn sm" style="display:inline-block;margin-top:10px;text-decoration:none">See all on LinkedIn ↗</a>
-    <div class="note" style="margin-top:8px">Links open a LinkedIn Easy Apply search (f_AL=true) for the role — specific postings rotate. Pay = 2026 estimates. “External ATS” = applies off-LinkedIn (e.g. Greenhouse).</div>
+    <div class="note" style="margin-top:8px">₱ = 2026 conversion (USD ₱61 · SGD ₱47 · AUD ₱42). “Live in …” = single-pro monthly cost of living; <b>net</b> = low-end pay − local expenses (a take-home gauge).${baseNote} All figures 2026 estimates; FX & rents move.</div>
   </div>`;}
 
 /* ---- default weights (seeded from his profile) ---- */
