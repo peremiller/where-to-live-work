@@ -455,10 +455,10 @@ const WORKJOBS = {
     {title:"Technical Program Manager (Platform)",company:"Zapier",loc:"Remote · Global",pay:"$150–200k",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Technical%20Program%20Manager&f_AL=true&f_WT=2",note:"True work-from-anywhere; async rigor maps to your SQE quality-gate background."},
     {title:"Senior TPM, R&D PMO",company:"GitLab",loc:"Remote · NA/EMEA",pay:"$170–242k",easy:false,url:"https://www.linkedin.com/jobs/search/?keywords=Senior%20Technical%20Program%20Manager&f_AL=true&f_WT=2",note:"All-remote; PMO program ownership ≈ a 1:1 lift. Many roles route via Greenhouse — verify per listing."},
     {title:"Program Manager (Launches)",company:"Automattic",loc:"Remote · Global",pay:"$90–200k+",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Program%20Manager%20Launches&f_AL=true&f_WT=2",note:"Distributed-first, equal pay anywhere; a rung below TPM to build launch cred."},
-    {title:"Technical Program Manager, Launches",company:"Anthropic",loc:"San Francisco / New York · Onsite",pay:"$200–300k+",easy:false,url:"https://job-boards.greenhouse.io/anthropic/jobs/5208193008",note:"Your actual application target — a real, currently-open Anthropic posting (Greenhouse). Office-first SF/NYC, not remote."}]},
+    {title:"Technical Program Manager",company:"Anthropic",loc:"San Francisco / New York · Onsite",pay:"$200–300k+",easy:false,url:"",note:"AI-lab TPM track — your application target. Opens Anthropic's live board; the app auto-refreshes to the exact open role."}]},
   relocate:{cat:"https://www.linkedin.com/jobs/search/?keywords=QA%20Manager%20OR%20Test%20Automation%20Lead%20OR%20Technical%20Program%20Manager&location=Singapore&f_AL=true",jobs:[
-    {title:"Lead Technical Program Manager",company:"Grab",loc:"Singapore · Onsite/Hybrid",pay:"S$130–185k/yr",easy:true,url:"",note:"Real currently-open Grab posting; QA→TPM leadership fit. Grab routinely sponsors an Employment Pass."},
-    {title:"Technical Program Manager, Customer Support",company:"ByteDance / TikTok",loc:"Singapore · Hybrid",pay:"S$140–230k/yr",easy:true,url:"",note:"Real currently-open TikTok TPM posting in their large SG hub; active EP sponsor."},
+    {title:"Technical Program Manager / QA Lead",company:"Grab",loc:"Singapore · Onsite/Hybrid",pay:"S$130–185k/yr",easy:true,url:"",note:"QA→TPM leadership fit; Grab routinely sponsors an Employment Pass. Opens Grab's Singapore engineering board."},
+    {title:"Technical Program Manager",company:"ByteDance / TikTok",loc:"Singapore · Hybrid",pay:"S$140–230k/yr",easy:true,url:"",note:"Large SG hub, active EP sponsor. Opens TikTok's Singapore TPM search."},
     {title:"Test Automation Lead / SDET Lead",company:"Infosys (DBS/GovTech vendor)",loc:"Singapore · Onsite",pay:"S$90–150k/yr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Test%20Automation%20Lead&location=Singapore&f_AL=true",note:"Closest to your automation depth; IT-services firms are the most reliable EP sponsors."},
     {title:"TPM / QA Lead",company:"Atlassian / Canva",loc:"Sydney, AU · Hybrid",pay:"A$140–220k/yr",easy:true,url:"https://www.linkedin.com/jobs/search/?keywords=Technical%20Program%20Manager&location=Sydney%2C%20Australia&f_AL=true",note:"Confirmed Subclass 482 sponsors; you clear the 2-yr bar. A strong AU backup to SG."}]},
   founder:{cat:"https://www.linkedin.com/jobs/search/?keywords=Entrepreneur%20in%20Residence%20OR%20Founder%20in%20Residence%20OR%20Founding&f_AL=true&f_TPR=r604800",jobs:[
@@ -520,9 +520,9 @@ const APPLY = {
   "Zapier":{url:"https://zapier.com/jobs",via:"Zapier Careers",kind:"search"},
   "GitLab":{url:"https://job-boards.greenhouse.io/gitlab",via:"GitLab · Greenhouse",kind:"search"},
   "Automattic":{url:"https://automattic.com/work-with-us/",via:"Automattic Careers",kind:"search"},
-  "Anthropic":{url:"https://job-boards.greenhouse.io/anthropic/jobs/5208193008",via:"Greenhouse",kind:"posting"},
-  "Grab":{url:"https://www.grab.careers/en/jobs/743999982243551/lead-technical-program-manager/",via:"Grab Careers",kind:"posting"},
-  "ByteDance / TikTok":{url:"https://lifeattiktok.com/search/7503917423352285448",via:"TikTok",kind:"posting"},
+  "Anthropic":{url:"https://job-boards.greenhouse.io/anthropic",via:"Anthropic · Greenhouse",kind:"search"},
+  "Grab":{url:"https://www.grab.careers/en/jobs/?location=Singapore%2C%20Singapore&team=Engineering",via:"Grab Careers",kind:"search"},
+  "ByteDance / TikTok":{url:"https://lifeattiktok.com/search?keyword=Technical%20Program%20Manager&location_code_list=CT_163",via:"TikTok Careers",kind:"search"},
   "Infosys (DBS/GovTech vendor)":{url:"https://digitalcareers.infosys.com/infosys/global-careers?location=Singapore",via:"Infosys Careers",kind:"search"},
   "Atlassian / Canva":{url:"https://www.atlassian.com/company/careers/all-jobs",via:"Atlassian Careers",kind:"search"},
   "Antler":{url:"https://www.antler.co/residency",via:"Antler Residency",kind:"program"},
@@ -564,7 +564,7 @@ function jobsPanel(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
     </div>`;}).join("");
   const baseNote=remote?` Remote roles are based in PH (Manila ~₱100k/mo) — or go cheaper: Cebu ~₱57k or Bangkok ~₱66k/mo for a bigger surplus.`:'';
   return `<div style="margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px 14px 12px">
-    <div class="src" style="color:#ff9f43;padding-top:8px">💼 ${d.jobs.length} roles · pay · ₱ · cost of living · apply <span style="color:var(--dim);font-weight:400">· listings verified ${SNAPSHOT}</span></div>
+    <div class="src" style="color:#ff9f43;padding-top:8px">💼 ${d.jobs.length} roles · pay · ₱ · cost of living · apply <span style="color:var(--dim);font-weight:400">· ${liveLabel()}</span></div>
     ${rows}
     <a href="${d.cat}" target="_blank" rel="noopener" class="btn sm" style="display:inline-block;margin-top:10px;text-decoration:none">Browse more on LinkedIn ↗</a>
     <div class="note" style="margin-top:8px"><b style="color:var(--good)">✓ Live posting</b> opens that exact open role (pulled from the employer's ATS on ${SNAPSHOT}); <b style="color:var(--mut)">🔎 Search</b> = no specific role open right now, opens the employer's filtered careers page; <b style="color:var(--acc)">▣ Program</b> = apply to a program/board, not one posting. Postings rotate — if a link 404s, it filled; use the careers page. ₱ = 2026 conversion (USD ₱61 · SGD ₱47 · AUD ₱42); “Live in …” = single-pro cost of living; net = low-end pay − expenses.${baseNote}</div>
@@ -748,7 +748,34 @@ function exportState(){const blob=new Blob([JSON.stringify(state,null,2)],{type:
 function resetAll(){if(confirm("Reset all weights and your note?")){localStorage.removeItem(LS);state=load();renderWeights();renderLists();renderProfile();flash("Reset");}}
 
 /* init */
-buildTabs();renderWeights();renderLists();renderProfile();
+/* ---- LIVE job sync: upgrade snapshot to current ATS postings via /api/jobs (Vercel) ---- */
+function liveLabel(){
+  if(window.__liveAsOf){const d=new Date(window.__liveAsOf);
+    const p=n=>String(n).padStart(2,'0');
+    return `🟢 live · updated ${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;}
+  return `listings verified ${SNAPSHOT}`;
+}
+function findJob(co){for(const k in WORKJOBS){const j=WORKJOBS[k].jobs.find(x=>x.company===co);if(j)return j;}return null;}
+async function refreshLiveJobs(){
+  try{
+    const r=await fetch('/api/jobs',{cache:'no-store'});
+    if(!r.ok) return;                       // running as static file / no serverless → keep verified snapshot
+    const data=await r.json();
+    (data.companies||[]).forEach(c=>{
+      const job=findJob(c.company); if(!job) return;
+      if(c.postings && c.postings.length){   // a real open role today → sync exact title + permalink
+        const p=c.postings[0];
+        job.title=p.title; if(p.location) job.loc=p.location;
+        APPLY[c.company]={url:p.url,via:c.via||'ATS',kind:'posting'};
+      }else{                                  // nothing open right now → honest search to the board
+        APPLY[c.company]={url:c.careers||((APPLY[c.company]||{}).url)||'#',via:c.via||'Careers',kind:'search'};
+      }
+    });
+    window.__liveAsOf=data.fetchedAt;
+    renderLists();
+  }catch(e){/* keep verified snapshot */}
+}
+buildTabs();renderWeights();renderLists();renderProfile();refreshLiveJobs();
 </script>
 </body>
 </html>
