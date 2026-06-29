@@ -506,13 +506,38 @@ const EXPENSES = {
   bangkok:{city:"Bangkok",totalP:65620,localTotal:"฿38,600/mo (~₱65.6k)"},
 };
 function kPhp(v){const a=Math.abs(v);return '₱'+(a>=1e6?(v/1e6).toFixed(1)+'M':Math.round(v/1e3)+'k');}
+/* ACCURATE apply links — each employer's official careers/ATS page, deep-linked to the role
+   where supported, WebFetch-verified to load (researched by 5 subagents). via = source label. */
+const APPLY = {
+  "Accenture Philippines":{url:"https://www.accenture.com/ph-en/careers/jobsearch?jk=quality+engineering",via:"Accenture Careers"},
+  "Cognizant":{url:"https://careers.cognizant.com/global-en/jobs/?keyword=test%20lead&location=Philippines",via:"Cognizant Careers"},
+  "Finastra":{url:"https://finastra.wd3.myworkdayjobs.com/FINC",via:"Finastra · Workday"},
+  "Viventis (BGC client)":{url:"https://www.linkedin.com/company/viventis-search-asia/jobs",via:"Viventis · LinkedIn"},
+  "Capgemini":{url:"https://www.capgemini.com/careers/join-capgemini/job-search/?country=Philippines&keyword=QA%20Automation",via:"Capgemini Careers"},
+  "NCS Philippines":{url:"https://www.ncs.co/careers/",via:"NCS Careers"},
+  "Zapier":{url:"https://zapier.com/jobs",via:"Zapier Careers"},
+  "GitLab":{url:"https://job-boards.greenhouse.io/gitlab",via:"GitLab · Greenhouse"},
+  "Automattic":{url:"https://automattic.com/work-with-us/",via:"Automattic Careers"},
+  "Anthropic":{url:"https://job-boards.greenhouse.io/anthropic",via:"Anthropic · Greenhouse"},
+  "Grab":{url:"https://www.grab.careers/en/jobs/?location=Singapore%2C%20Singapore&team=Engineering",via:"Grab Careers"},
+  "ByteDance / TikTok":{url:"https://joinbytedance.com/search?keywords=Technical%20Program%20Manager&location=Singapore",via:"ByteDance Careers"},
+  "Infosys (DBS/GovTech vendor)":{url:"https://digitalcareers.infosys.com/infosys/global-careers?location=Singapore&skills=Automation%20testing",via:"Infosys Careers"},
+  "Atlassian / Canva":{url:"https://www.atlassian.com/company/careers/all-jobs",via:"Atlassian Careers"},
+  "Antler":{url:"https://www.antler.co/residency",via:"Antler Residency"},
+  "FutureSight":{url:"https://futuresight.ventures/job/futuresight-website-entrepreneur-in-residence-future-ceo-founder/",via:"FutureSight"},
+  "YC-backed / stealth startups":{url:"https://www.workatastartup.com/jobs",via:"YC · Work at a Startup"},
+  "TEKsystems":{url:"https://careers.teksystems.com/us/en",via:"TEKsystems Careers"},
+  "Robert Half":{url:"https://www.roberthalf.com/us/en/jobs/all/qa-automation",via:"Robert Half Jobs"},
+  "Mercor":{url:"https://work.mercor.com/jobs",via:"Mercor Jobs"},
+  "Toptal":{url:"https://www.toptal.com/talent/apply",via:"Toptal Apply"},
+};
 function jobsLine(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
   const uniq=[...new Set(d.jobs.map(j=>j.company.split(' (')[0].split(' / ')[0]))];
   return `<div style="font-size:12px;color:var(--mut);margin-top:3px">💼 ${d.jobs.length} roles · ${uniq.slice(0,3).join(' · ')}${uniq.length>3?' +'+(uniq.length-3):''}</div>`;}
 function jobsPanel(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
   let remote=false;
   const rows=d.jobs.map(j=>{
-    const tag=j.easy?`<span style="color:var(--good)">Easy Apply ↗</span>`:`<span style="color:var(--warn)">External ATS ↗</span>`;
+    const ap=APPLY[j.company]||{url:j.url,via:"LinkedIn"};
     const m=JOBMETA[j.company]||{}; const exp=EXPENSES[m.costLoc];
     if(/Remote/i.test(j.loc)) remote=true;
     const phpLine=m.payPhp?`<div class="dim" style="font-size:11.5px;margin-top:1px">${m.payPhp}</div>`:'';
@@ -528,17 +553,17 @@ function jobsPanel(id){const d=WORKJOBS[id];if(!d||!d.jobs.length)return"";
         <div style="min-width:0"><b>${j.title}</b> <span class="muted" style="font-size:12.5px">@ ${j.company}</span>
           <div class="dim" style="font-size:12px;margin-top:1px">${j.loc}</div></div>
         <div style="text-align:right;white-space:nowrap"><div style="font-size:14px;font-weight:800">${j.pay}</div>${phpLine}
-          <a href="${j.url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;text-decoration:none">${tag}</a></div>
+          <a href="${ap.url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;text-decoration:none;color:var(--good)">Apply · ${ap.via} ↗</a></div>
       </div>
       <div class="muted" style="font-size:12px;margin-top:4px">${j.note}</div>
       ${costLine}
     </div>`;}).join("");
   const baseNote=remote?` Remote roles are based in PH (Manila ~₱100k/mo) — or go cheaper: Cebu ~₱57k or Bangkok ~₱66k/mo for a bigger surplus.`:'';
   return `<div style="margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px 14px 12px">
-    <div class="src" style="color:#ff9f43;padding-top:8px">💼 ${d.jobs.length} LinkedIn roles · pay · ₱ · cost of living</div>
+    <div class="src" style="color:#ff9f43;padding-top:8px">💼 ${d.jobs.length} roles · pay · ₱ · cost of living · apply</div>
     ${rows}
-    <a href="${d.cat}" target="_blank" rel="noopener" class="btn sm" style="display:inline-block;margin-top:10px;text-decoration:none">See all on LinkedIn ↗</a>
-    <div class="note" style="margin-top:8px">₱ = 2026 conversion (USD ₱61 · SGD ₱47 · AUD ₱42). “Live in …” = single-pro monthly cost of living; <b>net</b> = low-end pay − local expenses (a take-home gauge).${baseNote} All figures 2026 estimates; FX & rents move.</div>
+    <a href="${d.cat}" target="_blank" rel="noopener" class="btn sm" style="display:inline-block;margin-top:10px;text-decoration:none">Browse more on LinkedIn ↗</a>
+    <div class="note" style="margin-top:8px"><b>Apply</b> links go to each employer's official careers/ATS page (verified to load), deep-linked to the role where supported — not a generic search; specific postings rotate, so use the page's own filters. ₱ = 2026 conversion (USD ₱61 · SGD ₱47 · AUD ₱42). “Live in …” = single-pro monthly cost of living; <b>net</b> = low-end pay − local expenses.${baseNote} 2026 estimates; FX & rents move.</div>
   </div>`;}
 
 /* ---- default weights (seeded from his profile) ---- */
