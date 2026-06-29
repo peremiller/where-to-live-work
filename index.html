@@ -64,6 +64,17 @@
   .rank.work .minibar>i{background:#ff9f43}
   .rank.car .bigbar>i{background:linear-gradient(90deg,#3fb950,#46c98b)}
   .rank.car .minibar>i{background:#3fb950}
+  .cmpctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 0}
+  .cmpctrl select,.cmpctrl input{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 9px;font-size:12.5px;outline:none}
+  .cmpwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .cmp{width:100%;border-collapse:collapse;font-size:13px;min-width:820px}
+  .cmp th{position:sticky;top:0;background:var(--panel2);color:var(--mut);text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;font-weight:600;user-select:none}
+  .cmp th:hover{color:var(--txt)}
+  .cmp td{padding:8px 11px;border-bottom:1px solid var(--line);white-space:nowrap;color:var(--txt)}
+  .cmp tr:hover td{background:rgba(63,185,80,.06)}
+  .cmp .car{white-space:normal;min-width:170px}
+  .cmp img.th{width:56px;height:40px;object-fit:cover;border-radius:5px;border:1px solid var(--line);vertical-align:middle;background:var(--panel2)}
+  .cmp .seg{font-size:10.5px;color:#3fb950;border:1px solid #2f5f3a;border-radius:5px;padding:1px 6px}
   /* sliders */
   .wrow{display:grid;grid-template-columns:140px 1fr 42px;gap:12px;align-items:center;margin:9px 0}
   .wrow label{font-size:13.5px;color:var(--txt)}
@@ -164,6 +175,16 @@
       <div class="row" style="margin-top:8px"><span class="dim" style="font-size:12px">⬇ Export all car details:</span><button class="btn sm acc" onclick="exportCarsXLSX()">Excel (.xlsx)</button><button class="btn sm" onclick="exportCarsCSV()">CSV</button><span class="dim" style="font-size:11.5px">— 16 models · price, monthly, specs, dealer, map</span></div>
     </div>
     <div id="carList"></div>
+  </section>
+
+  <!-- COMPARE CARS -->
+  <section class="view" data-v="compare">
+    <div class="card">
+      <h2>📊 Compare all cars</h2>
+      <p class="muted">Every model side by side. Filter by segment, brand, transmission, seats or price — and sort by best seats, fuel economy, power, price or monthly. Tap a column header to sort.</p>
+      <div class="cmpctrl" id="cmpControls"></div>
+    </div>
+    <div id="cmpTable"></div>
   </section>
 
   <!-- PRIORITIES -->
@@ -623,23 +644,33 @@ const CARMODELS = {
   sedan:[
     {brand:"Toyota",model:"Vios 1.3 XLE CVT",type:"Subcompact sedan · 1.3L CVT",price:"₱908k",priceP:908000,monthly:"₱15.1k/mo",monthlyP:15079,note:"~19–21 km/L; PH's #1 sedan — bulletproof reliability + best resale; parts/service everywhere near Las Piñas."},
     {brand:"Suzuki",model:"Dzire Hybrid GLX CVT",type:"Subcompact sedan · 1.2L mild-hybrid",price:"₱998k",priceP:998000,monthly:"₱16.6k/mo",monthlyP:16573,note:"~23–26 km/L (class-leading); cheapest to run in heavy traffic — best economy for a cost-conscious daily."},
-    {brand:"Honda",model:"City 1.5 V CVT (Sensing)",type:"Subcompact sedan · 1.5L CVT",price:"₱1.08M",priceP:1083000,monthly:"₱18.0k/mo",monthlyP:17985,note:"~18–20 km/L; roomiest cabin + Honda Sensing safety — refined highway runs to Tagaytay/Batangas."}],
+    {brand:"Honda",model:"City 1.5 V CVT (Sensing)",type:"Subcompact sedan · 1.5L CVT",price:"₱1.08M",priceP:1083000,monthly:"₱18.0k/mo",monthlyP:17985,note:"~18–20 km/L; roomiest cabin + Honda Sensing safety — refined highway runs to Tagaytay/Batangas."},
+    {brand:"Toyota",model:"Wigo 1.0 G CVT",type:"Hatchback · 1.0L CVT",price:"₱735k",priceP:735000,monthly:"₱12.2k/mo",monthlyP:12206,note:"Cheapest no-fuss city runabout; tiny footprint, easy parking, Toyota resale + service network."},
+    {brand:"Nissan",model:"Almera VL Turbo CVT",type:"Subcompact sedan · 1.0L turbo",price:"₱1.16M",priceP:1155000,monthly:"₱19.2k/mo",monthlyP:19180,note:"Punchy turbo torque + roomy cabin; big-car highway feel on a small, efficient engine."}],
   crossover:[
     {brand:"Ford",model:"Territory 1.5 Titanium EcoBoost",type:"Compact crossover · 1.5L turbo",price:"₱1.34M",priceP:1335000,monthly:"₱22.2k/mo",monthlyP:22169,note:"~15 km/L; biggest tech-loaded cabin, most space-per-peso, cheapest monthly here — resale trails the Japanese."},
     {brand:"Honda",model:"HR-V 1.5 S CVT (Sensing)",type:"Compact crossover · 1.5L",price:"₱1.45M",priceP:1450000,monthly:"₱24.1k/mo",monthlyP:24079,note:"~17 km/L, ~196mm clearance (highest here) for rough beach/highland roads; versatile cabin, strong resale."},
-    {brand:"Toyota",model:"Corolla Cross 1.8 G HEV",type:"Compact crossover · 1.8L hybrid",price:"₱1.51M",priceP:1514000,monthly:"₱25.1k/mo",monthlyP:25142,note:"~23 km/L hybrid, roomy 5-seater; Toyota's resale + reliability make it the safe do-everything default."}],
+    {brand:"Toyota",model:"Corolla Cross 1.8 G HEV",type:"Compact crossover · 1.8L hybrid",price:"₱1.51M",priceP:1514000,monthly:"₱25.1k/mo",monthlyP:25142,note:"~23 km/L hybrid, roomy 5-seater; Toyota's resale + reliability make it the safe do-everything default."},
+    {brand:"Toyota",model:"Raize 1.0 Turbo CVT",type:"Subcompact crossover · 1.0L turbo",price:"₱1.07M",priceP:1069000,monthly:"₱17.8k/mo",monthlyP:17752,note:"Tidy turbocharged daily city crossover; top trim adds 17\" alloys, leather, blind-spot monitor."},
+    {brand:"Geely",model:"Coolray Premium Plus 1.5T DCT",type:"Subcompact crossover · 1.5L turbo",price:"₱1.05M",priceP:1049000,monthly:"₱17.4k/mo",monthlyP:17420,note:"Most power-for-money in class (177 hp turbo) + 5-yr warranty; sunroof, leather. Resale unproven vs Japanese."}],
   mpv:[
     {brand:"Suzuki",model:"Ertiga Hybrid GL AT",type:"7-seat MPV · 1.5L mild-hybrid",price:"₱1.13M",priceP:1128000,monthly:"₱18.7k/mo",monthlyP:18732,note:"Cheapest to buy & run, ~18–20 km/L; right-sized 7-seater for weekly church + occasional out-of-town."},
     {brand:"Mitsubishi",model:"Xpander GLS AT",type:"7-seat MPV · 1.5L gas",price:"₱1.26M",priceP:1259000,monthly:"₱20.9k/mo",monthlyP:20908,note:"Best-selling family MPV; flexible 7-seat folding, big cargo, ~14 km/L, strong dealer network + resale."},
-    {brand:"Toyota",model:"Innova 2.8 J Diesel MT",type:"7-seat MPV · 2.8L turbo-diesel",price:"₱1.27M",priceP:1267000,monthly:"₱21.0k/mo",monthlyP:21041,note:"Body-on-frame durability + diesel torque for loaded provincial hauls; PH gold standard for resale (note: manual)."}],
+    {brand:"Toyota",model:"Innova 2.8 J Diesel MT",type:"7-seat MPV · 2.8L turbo-diesel",price:"₱1.27M",priceP:1267000,monthly:"₱21.0k/mo",monthlyP:21041,note:"Body-on-frame durability + diesel torque for loaded provincial hauls; PH gold standard for resale (note: manual)."},
+    {brand:"Toyota",model:"Avanza 1.5 G CVT",type:"7-seat MPV · 1.5L",price:"₱1.06M",priceP:1059000,monthly:"₱17.6k/mo",monthlyP:17587,note:"Spacious, fuel-thrifty FWD family MPV; LED headlights, 16\" alloys — cheapest 7-seater here."},
+    {brand:"Honda",model:"BR-V 1.5 VX CVT (Sensing)",type:"7-seat MPV/crossover · 1.5L",price:"₱1.39M",priceP:1390000,monthly:"₱23.1k/mo",monthlyP:23083,note:"Higher-riding 7-seater (207mm clearance) with Honda Sensing ADAS, leather, 17\" alloys."}],
   hybrid:[
     {brand:"Nissan",model:"Kicks e-POWER VE",type:"Series-hybrid crossover",price:"₱1.28M",priceP:1279000,monthly:"₱21.2k/mo",monthlyP:21240,note:"~19–23 km/L, EV-like torque but never plugs in (just fill up — zero range anxiety). Lowest-risk fuel-saver here."},
     {brand:"BYD",model:"Dolphin (44.9 kWh)",type:"Full EV hatchback · ~405 km",price:"₱1.40M",priceP:1398000,monthly:"₱23.2k/mo",monthlyP:23216,note:"Running cost ~₱2–3/km vs ~₱5–6 petrol. CAVEAT: needs home/condo charging (a possible blocker) + EV resale unproven.",flag:"⚠ Needs home charging · EV resale unproven"},
-    {brand:"Toyota",model:"Corolla Cross 1.8 G HEV",type:"Self-charging hybrid crossover",price:"₱1.51M",priceP:1514000,monthly:"₱25.1k/mo",monthlyP:25142,note:"~19–27 km/L self-charging (no plug); best resale/reliability of the trio, dense service network, battery under warranty.",flag:"✓ No charging needed (self-charging hybrid)"}],
+    {brand:"Toyota",model:"Corolla Cross 1.8 G HEV",type:"Self-charging hybrid crossover",price:"₱1.51M",priceP:1514000,monthly:"₱25.1k/mo",monthlyP:25142,note:"~19–27 km/L self-charging (no plug); best resale/reliability of the trio, dense service network, battery under warranty.",flag:"✓ No charging needed (self-charging hybrid)"},
+    {brand:"BYD",model:"Atto 3 Dynamic",type:"Full EV crossover · ~410 km",price:"₱1.60M",priceP:1598000,monthly:"₱26.5k/mo",monthlyP:26539,note:"204 hp, 410 km range; running cost far below petrol. CAVEAT: home/condo charging access; EV resale unproven.",flag:"⚠ Needs home charging · EV resale unproven"},
+    {brand:"Toyota",model:"Yaris Cross 1.5 S HEV",type:"Hybrid crossover",price:"₱1.61M",priceP:1610000,monthly:"₱26.7k/mo",monthlyP:26736,note:"Self-charging hybrid (no plug, just refuel); ~15–17 km/L real-world, 8-yr battery warranty.",flag:"✓ No charging needed (self-charging hybrid)"}],
   pickup:[
     {brand:"Ford",model:"Ranger 2.0 Turbo XLT 4x2 AT",type:"Midsize pickup · 2.0L diesel",price:"₱1.69M",priceP:1694000,monthly:"₱28.1k/mo",monthlyP:28131,note:"168hp single-turbo diesel sips fuel on long hauls; high clearance + bed for sand/gravel/beach gear; best cabin tech."},
     {brand:"Mitsubishi",model:"Triton GLX 2WD AT",type:"Midsize pickup · 2.4L diesel",price:"₱1.74M",priceP:1735000,monthly:"₱28.8k/mo",monthlyP:28812,note:"Most powerful diesel here (181hp/430Nm) for loaded island trips; comfy ride, good warranty, wide service reach."},
-    {brand:"Toyota",model:"Hilux 2.4 G DSL 4x2 AT",type:"Midsize pickup · 2.4L diesel",price:"₱1.74M",priceP:1740000,monthly:"₱28.9k/mo",monthlyP:28895,note:"Legendary durability + cheapest-to-maintain network; frugal 2.4 diesel, top resale — the cost-conscious workhorse.",flag:"ⓘ 4x4 variant adds true beach-sand capability"}],
+    {brand:"Toyota",model:"Hilux 2.4 G DSL 4x2 AT",type:"Midsize pickup · 2.4L diesel",price:"₱1.74M",priceP:1740000,monthly:"₱28.9k/mo",monthlyP:28895,note:"Legendary durability + cheapest-to-maintain network; frugal 2.4 diesel, top resale — the cost-conscious workhorse.",flag:"ⓘ 4x4 variant adds true beach-sand capability"},
+    {brand:"Toyota",model:"Fortuner 2.4 G Diesel 4x2 AT",type:"7-seat midsize SUV · 2.4L diesel",price:"₱1.87M",priceP:1867000,monthly:"₱31.0k/mo",monthlyP:31006,note:"Body-on-frame 7-seat SUV for family + provincial/beach trips; PH resale king in the segment."},
+    {brand:"Ford",model:"Everest Sport 2.0 Turbo 4x2 AT",type:"7-seat midsize SUV · 2.0L diesel",price:"₱2.14M",priceP:2139000,monthly:"₱35.5k/mo",monthlyP:35521,note:"Tech-loaded 7-seat SUV; most refined cabin + most power here for big family road trips."}],
 };
 /* Per-model photo (Wikimedia Commons, hotlinkable) + nearest south-Metro-Manila dealer + Google Maps (researched/verified by 5 subagents). Keyed by model string. */
 const CARMEDIA = {
@@ -657,6 +688,16 @@ const CARMEDIA = {
   "Ranger 2.0 Turbo XLT 4x2 AT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/2021%20Ford%20Ranger%20XL%20SuperCab%204WD%20in%20Iconic%20Silver,%20front%20left.jpg?width=420",dealer:"Ford Alabang (Dearborn)",maps:"https://www.google.com/maps/search/?api=1&query=Ford%20Alabang%20Muntinlupa"},
   "Triton GLX 2WD AT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Mitsubishi%20Strada%20Triton%204x4%20Athlete%202024%20(1).jpg?width=420",dealer:"Mitsubishi Las Piñas (Citimotors)",maps:"https://www.google.com/maps/search/?api=1&query=Mitsubishi%20Motors%20Las%20Pi%C3%B1as%20Citimotors"},
   "Hilux 2.4 G DSL 4x2 AT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Toyota%20Hilux%20N80%20001.JPG?width=420",dealer:"Toyota Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Toyota%20Alabang%20Inc%20Muntinlupa"},
+  "Wigo 1.0 G CVT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Toyota%20Wigo%201.0%20G%202023%20(1).jpg?width=420",dealer:"Toyota Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Toyota%20dealership%20Alabang"},
+  "Almera VL Turbo CVT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Nissan%20Almera%20N18%201.0%20VL%20Turbo%20Gun%20Metallic.jpg?width=420",dealer:"Nissan Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Nissan%20dealership%20Alabang"},
+  "Raize 1.0 Turbo CVT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/2021%20Toyota%20Raize%201.0T%20G%20(Indonesia)%20front%20view.jpg?width=420",dealer:"Toyota Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Toyota%20dealership%20Alabang"},
+  "Coolray Premium Plus 1.5T DCT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Geely%20Coolray%20SX11%20FL%201.5TD%20Sport%20Plus%20Blur%20Gray%2002.jpg?width=420",dealer:"Geely Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Geely%20dealership%20Alabang"},
+  "Avanza 1.5 G CVT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/2022%20Toyota%20Avanza%201.5%20G%20W101LE%20(Philippines).jpg?width=420",dealer:"Toyota Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Toyota%20dealership%20Alabang"},
+  "BR-V 1.5 VX CVT (Sensing)":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Honda%20BR-V%201.5%20VX%20Honda%20Sensing%202022%20(1).jpg?width=420",dealer:"Honda Cars Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Honda%20dealership%20Alabang"},
+  "Atto 3 Dynamic":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/2023%20BYD%20Atto%203%20Design%202.jpg?width=420",dealer:"BYD Alabang (ACMobility)",maps:"https://www.google.com/maps/search/?api=1&query=BYD%20dealership%20Alabang"},
+  "Yaris Cross 1.5 S HEV":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/2024%20Toyota%20Yaris%20Cross%201.5%20G%20in%20Greenish%20Gun%20Metal,%20front%20left.jpg?width=420",dealer:"Toyota Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Toyota%20dealership%20Alabang"},
+  "Fortuner 2.4 G Diesel 4x2 AT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Toyota_Fortuner_4x2_G_2021.jpg?width=420",dealer:"Toyota Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Toyota%20dealership%20Alabang"},
+  "Everest Sport 2.0 Turbo 4x2 AT":{img:"https://commons.wikimedia.org/wiki/Special:FilePath/Ford_Everest_2.0_Turbo_Sport_4x2_2023.jpg?width=420",dealer:"Ford Alabang",maps:"https://www.google.com/maps/search/?api=1&query=Ford%20dealership%20Alabang"},
 };
 /* Extra per-model specs for the spreadsheet export (researched by 5 subagents). Keyed by model string. */
 const CARSPECS = {
@@ -674,6 +715,16 @@ const CARSPECS = {
   "Ranger 2.0 Turbo XLT 4x2 AT":{seats:5,economy:"~13 km/L",engine:"2.0L turbo-diesel (1996cc)",power:"168 hp / 405 Nm",transmission:"6AT",warranty:"5 yrs / 150,000 km"},
   "Triton GLX 2WD AT":{seats:5,economy:"~13 km/L",engine:"2.4L turbo-diesel (2442cc)",power:"180 hp / 430 Nm",transmission:"6AT",warranty:"3 yrs / 100,000 km"},
   "Hilux 2.4 G DSL 4x2 AT":{seats:5,economy:"~12 km/L",engine:"2.4L turbo-diesel (2393cc)",power:"148 hp / 400 Nm",transmission:"6AT",warranty:"3 yrs / 100,000 km (+2 yrs loyalty)"},
+  "Wigo 1.0 G CVT":{seats:5,economy:"~22 km/L",engine:"1.0L gas (998cc, 3-cyl)",power:"65 hp / 89 Nm",transmission:"CVT",warranty:"3 yrs / 100,000 km"},
+  "Almera VL Turbo CVT":{seats:5,economy:"~23 km/L",engine:"1.0L turbo (998cc, 3-cyl)",power:"99 hp / 152 Nm",transmission:"CVT",warranty:"3 yrs / 100,000 km"},
+  "Raize 1.0 Turbo CVT":{seats:5,economy:"~17 km/L",engine:"1.0L turbo (3-cyl)",power:"98 hp / 140 Nm",transmission:"CVT",warranty:"3 yrs / 100,000 km"},
+  "Coolray Premium Plus 1.5T DCT":{seats:5,economy:"~16 km/L",engine:"1.5L turbo (3-cyl)",power:"177 hp / 255 Nm",transmission:"7-speed DCT",warranty:"5 yrs / 150,000 km"},
+  "Avanza 1.5 G CVT":{seats:7,economy:"~15 km/L",engine:"1.5L gas (1496cc)",power:"105 hp / 138 Nm",transmission:"CVT",warranty:"3 yrs / 100,000 km"},
+  "BR-V 1.5 VX CVT (Sensing)":{seats:7,economy:"~16 km/L",engine:"1.5L gas (1498cc)",power:"119 hp / 145 Nm",transmission:"CVT",warranty:"3 yrs / 100,000 km"},
+  "Atto 3 Dynamic":{seats:5,economy:"~410 km / 49.9 kWh",engine:"Electric (Blade LFP)",power:"204 hp / 310 Nm",transmission:"single-speed EV",warranty:"6 yrs/150,000 km (batt 8 yrs/160,000)"},
+  "Yaris Cross 1.5 S HEV":{seats:5,economy:"~15–17 km/L",engine:"1.5L hybrid (Atkinson 3-cyl + e-motor)",power:"116 hp / 121 Nm",transmission:"e-CVT",warranty:"5 yrs/150,000 km (batt 8 yrs/200,000)"},
+  "Fortuner 2.4 G Diesel 4x2 AT":{seats:7,economy:"~12 km/L",engine:"2.4L turbo-diesel (2GD-FTV)",power:"148 hp / 400 Nm",transmission:"6AT",warranty:"3 yrs / 100,000 km"},
+  "Everest Sport 2.0 Turbo 4x2 AT":{seats:7,economy:"~13 km/L",engine:"2.0L single-turbo diesel",power:"168 hp / 405 Nm",transmission:"6AT",warranty:"3 yrs / 100,000 km"},
 };
 /* ---- SPREADSHEET EXPORT (CSV + real .xlsx, no dependencies) ---- */
 const CAR_EXPORT_COLS = [
@@ -790,6 +841,70 @@ function carPanel(id){
     <div class="note" style="margin-top:9px">Monthly = 20% DP · 80% loan · 5-yr @ 9% (≈₱20,758/mo per ₱1M financed; dealer promos run lower). The “% vs ₱120k/mo savings” badge shows how heavy the amortization is — and it excludes ~₱90–130k/yr running costs. 2026 SRPs, estimates.</div>
   </div>`;}
 
+/* ---- COMPARE ALL CARS: flat list + filter/sort table ---- */
+function _econNum(s){const m=(""+s).match(/([\d.]+)/);return m?parseFloat(m[1]):null;}
+function _powerNum(s){const m=(""+s).match(/([\d.]+)\s*(hp|PS|kW|bhp)/i);if(!m)return null;let v=parseFloat(m[1]);if(/kW/i.test(m[2]))v=Math.round(v*1.341);return v;}
+function _transClass(s){s=""+s;if(/MT|manual/i.test(s))return "Manual";if(/single-speed|\bEV\b|e-?POWER/i.test(s))return "1-speed (EV/e-Power)";if(/CVT/i.test(s))return "CVT";if(/AT|automatic|DCT/i.test(s))return "Automatic";return "Other";}
+function flatCars(){
+  const SN={sedan:"Sedan",crossover:"Crossover",mpv:"MPV",hybrid:"Hybrid/EV",pickup:"Pickup/SUV"};
+  const out=[],seen=new Set();
+  Object.keys(CARMODELS).forEach(seg=>{(CARMODELS[seg]||[]).forEach(re=>{
+    const k=re.brand+"|"+re.model; if(seen.has(k))return; seen.add(k);
+    const sp=CARSPECS[re.model]||{}, md=CARMEDIA[re.model]||{};
+    out.push({seg,segName:SN[seg]||seg,brand:re.brand,model:re.model,type:re.type,price:re.price,priceP:re.priceP,monthly:re.monthly,monthlyP:re.monthlyP,
+      seats:sp.seats||null,economy:sp.economy||"—",engine:sp.engine||"—",power:sp.power||"—",transmission:sp.transmission||"—",
+      econNum:_econNum(sp.economy),powerNum:_powerNum(sp.power),trans:_transClass(sp.transmission),
+      img:md.img||"",dealer:md.dealer||"",maps:md.maps||""});
+  });});
+  return out;
+}
+let CARVIEW={sort:"priceP",dir:1,seg:"",brand:"",trans:"",minSeats:0,maxPrice:0,q:""};
+function sortCV(k){const v=CARVIEW; if(v.sort===k){v.dir=-v.dir;} else {v.sort=k; v.dir=(k==="priceP"||k==="monthlyP"||k==="brand"||k==="trans")?1:-1;} renderCompareTable();}
+function resetCV(){CARVIEW={sort:"priceP",dir:1,seg:"",brand:"",trans:"",minSeats:0,maxPrice:0,q:""};renderCompareControls();renderCompareTable();}
+function renderCompareControls(){
+  const all=flatCars(), uniq=a=>[...new Set(a)].filter(Boolean).sort();
+  const brands=uniq(all.map(c=>c.brand)), transes=uniq(all.map(c=>c.trans));
+  const segs=[["","All segments"],["sedan","Sedan"],["crossover","Crossover"],["mpv","MPV"],["hybrid","Hybrid/EV"],["pickup","Pickup/SUV"]];
+  const o=(val,lbl,sel)=>`<option value="${val}"${sel?" selected":""}>${lbl}</option>`;
+  document.getElementById("cmpControls").innerHTML=
+    `<input placeholder="🔍 brand / model" value="${(CARVIEW.q||"").replace(/"/g,'&quot;')}" oninput="CARVIEW.q=this.value;renderCompareTable()" style="min-width:150px">`+
+    `<select onchange="CARVIEW.seg=this.value;renderCompareTable()">${segs.map(([v,l])=>o(v,l,CARVIEW.seg===v)).join("")}</select>`+
+    `<select onchange="CARVIEW.brand=this.value;renderCompareTable()">${o("","All brands",!CARVIEW.brand)}${brands.map(b=>o(b,b,CARVIEW.brand===b)).join("")}</select>`+
+    `<select onchange="CARVIEW.trans=this.value;renderCompareTable()">${o("","Any transmission",!CARVIEW.trans)}${transes.map(t=>o(t,t,CARVIEW.trans===t)).join("")}</select>`+
+    `<select onchange="CARVIEW.minSeats=+this.value;renderCompareTable()">${o(0,"Any seats",!CARVIEW.minSeats)}${o(5,"5+ seats",CARVIEW.minSeats===5)}${o(7,"7+ seats",CARVIEW.minSeats===7)}</select>`+
+    `<select onchange="CARVIEW.maxPrice=+this.value;renderCompareTable()">${o(0,"Any price",!CARVIEW.maxPrice)}${o(1000000,"≤ ₱1.0M",CARVIEW.maxPrice===1000000)}${o(1500000,"≤ ₱1.5M",CARVIEW.maxPrice===1500000)}${o(2000000,"≤ ₱2.0M",CARVIEW.maxPrice===2000000)}</select>`+
+    `<select onchange="var p=this.value.split('|');CARVIEW.sort=p[0];CARVIEW.dir=+p[1];renderCompareTable()">`+
+      `${o("priceP|1","Sort: Price ↑",CARVIEW.sort==="priceP")}${o("monthlyP|1","Sort: Monthly ↑",CARVIEW.sort==="monthlyP")}${o("seats|-1","Sort: Most seats",CARVIEW.sort==="seats")}${o("econNum|-1","Sort: Best fuel econ",CARVIEW.sort==="econNum")}${o("powerNum|-1","Sort: Most power",CARVIEW.sort==="powerNum")}${o("trans|1","Sort: Transmission",CARVIEW.sort==="trans")}`+
+    `</select>`+
+    `<button class="btn sm" onclick="resetCV()">Reset</button>`;
+}
+function renderCompareTable(){
+  const v=CARVIEW; let L=flatCars();
+  if(v.seg)L=L.filter(c=>c.seg===v.seg);
+  if(v.brand)L=L.filter(c=>c.brand===v.brand);
+  if(v.trans)L=L.filter(c=>c.trans===v.trans);
+  if(v.minSeats)L=L.filter(c=>(c.seats||0)>=v.minSeats);
+  if(v.maxPrice)L=L.filter(c=>(c.priceP||0)<=v.maxPrice);
+  if(v.q){const q=v.q.toLowerCase();L=L.filter(c=>(c.brand+" "+c.model).toLowerCase().includes(q));}
+  const key=v.sort,dir=v.dir;
+  L.sort((a,b)=>{let x=a[key],y=b[key];if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;return typeof x==="string"?dir*x.localeCompare(y):dir*(x-y);});
+  const ar=k=>v.sort===k?(v.dir>0?" ▲":" ▼"):"";
+  const H=(k,l)=>`<th onclick="sortCV('${k}')">${l}${ar(k)}</th>`;
+  const rows=L.map(c=>`<tr>
+    <td>${c.img?`<img class="th" src="${c.img}" loading="lazy" onerror="this.style.display='none'" alt="">`:""}</td>
+    <td class="car"><b>${c.brand} ${c.model}</b><div class="dim" style="font-size:11px">${c.type}</div></td>
+    <td><span class="seg">${c.segName}</span></td>
+    <td>${c.seats||"—"}</td><td>${c.economy}</td><td>${c.engine}</td><td>${c.power}</td><td>${c.transmission}</td>
+    <td><b>${c.price}</b></td><td style="color:#3fb950">${c.monthly}</td>
+    <td>${c.maps?`<a href="${c.maps}" target="_blank" rel="noopener" style="color:var(--acc);text-decoration:none">📍 ${c.dealer||"Store"}</a>`:""}</td>
+  </tr>`).join("");
+  document.getElementById("cmpTable").innerHTML=
+    `<div class="dim" style="font-size:12px;margin:10px 0 6px">${L.length} cars${L.length<flatCars().length?` (of ${flatCars().length})`:""}</div>
+     <div class="cmpwrap"><table class="cmp"><thead><tr>
+       <th></th>${H("brand","Car")}<th>Segment</th>${H("seats","Seats")}${H("econNum","Fuel econ")}<th>Engine</th>${H("powerNum","Power")}${H("trans","Transmission")}${H("priceP","Price")}${H("monthlyP","Monthly")}<th>Store</th>
+     </tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
 /* ---- default weights (seeded from his profile) ---- */
 const DEFAULTS = {
   live:{career:20,cost:15,family:20,climate:12,safety:10,lifestyle:13,ease:10},
@@ -829,7 +944,7 @@ function ranked(list, weights){
 }
 
 /* ============================ RENDER ============================ */
-const TABS=[["overview","Overview"],["live","🏠 Where to live"],["work","💼 Where to work"],["cars","🚗 Car to buy"],["priorities","🎚️ Priorities"],["profile","🧬 Profile"],["data","🔎 Data &amp; method"]];
+const TABS=[["overview","Overview"],["live","🏠 Where to live"],["work","💼 Where to work"],["cars","🚗 Car to buy"],["compare","📊 Compare cars"],["priorities","🎚️ Priorities"],["profile","🧬 Profile"],["data","🔎 Data &amp; method"]];
 function buildTabs(){
   document.getElementById("tabs").innerHTML = TABS.map(([k,l],i)=>
     `<div class="tab${i===0?' active':''}" data-t="${k}" onclick="go('${k}')">${l}</div>`).join("");
@@ -1005,7 +1120,7 @@ async function refreshLiveJobs(){
     renderLists();
   }catch(e){/* keep verified snapshot */}
 }
-buildTabs();renderWeights();renderLists();renderProfile();refreshLiveJobs();
+buildTabs();renderWeights();renderLists();renderProfile();renderCompareControls();renderCompareTable();refreshLiveJobs();
 </script>
 </body>
 </html>
