@@ -2,6 +2,33 @@
 (() => {
   'use strict';
   const DIMS = ['focus','social','creative','technical','enterprise','routine','community','outdoors','autonomy'];
+  const STRENGTH_DOMAINS = {
+    'Executing':['Achiever','Arranger','Belief','Consistency','Deliberative','Discipline','Focus','Responsibility','Restorative'],
+    'Influencing':['Activator','Command','Communication','Competition','Maximizer','Self-Assurance','Significance','Woo'],
+    'Relationship Building':['Adaptability','Connectedness','Developer','Empathy','Harmony','Includer','Individualization','Positivity','Relator'],
+    'Strategic Thinking':['Analytical','Context','Futuristic','Ideation','Input','Intellection','Learner','Strategic']
+  };
+  const THEMES=Object.values(STRENGTH_DOMAINS).flat();
+  const THEME_ACTIVITIES={
+    Achiever:'Plan regular goals and visible progress.',Arranger:'Coordinate people, spaces and resources.',Belief:'Make room for personally meaningful activities.',Consistency:'Look for clear shared rules and dependable routines.',Deliberative:'Compare options carefully before committing.',Discipline:'Build an organized daily structure.',Focus:'Protect time for the priorities you choose.',Responsibility:'Find work with clear ownership and follow-through.',Restorative:'Explore troubleshooting and improvement projects.',
+    Activator:'Find opportunities to start practical experiments.',Command:'Explore settings where you can clarify decisions.',Communication:'Look for opportunities to explain ideas and share stories.',Competition:'Choose meaningful benchmarks for your own goals.',Maximizer:'Seek opportunities to improve work that is already strong.','Self-Assurance':'Make room to exercise independent judgment.',Significance:'Look for work whose contribution you value.',Woo:'Find opportunities to meet new people.',
+    Adaptability:'Leave room for changing plans and new experiences.',Connectedness:'Explore how your work connects to a wider purpose.',Developer:'Look for mentoring and development activities.',Empathy:'Make space to listen to individual experiences.',Harmony:'Explore cooperative ways to resolve differences.',Includer:'Look for activities that welcome participation.',Individualization:'Adapt support and collaboration to the individual.',Positivity:'Find opportunities to encourage progress.',Relator:'Make time for sustained working relationships.',
+    Analytical:'Investigate evidence and compare explanations.',Context:'Learn from history and earlier decisions.',Futuristic:'Explore possibilities and longer-term plans.',Ideation:'Make room to develop and connect ideas.',Input:'Find useful resources and collect what informs your work.',Intellection:'Protect time to think and reflect.',Learner:'Build regular opportunities to study and practise.',Strategic:'Compare alternative routes toward a goal.'
+  };
+  // Editorial activity tags for living and working setups; not Gallup city ratings.
+  const STRENGTH_TAGS={
+    bgc:{live:['Achiever','Activator','Competition','Focus','Significance','Woo'],work:['Achiever','Activator','Command','Communication','Competition','Futuristic','Maximizer','Significance','Strategic','Woo']},
+    makati:{live:['Achiever','Consistency','Deliberative','Discipline','Focus','Responsibility'],work:['Arranger','Command','Communication','Competition','Consistency','Maximizer','Responsibility','Self-Assurance','Woo']},
+    alabang:{live:['Belief','Consistency','Discipline','Empathy','Harmony','Relator','Responsibility'],work:['Arranger','Developer','Empathy','Harmony','Individualization','Relator','Responsibility']},
+    nuvali:{live:['Connectedness','Deliberative','Discipline','Focus','Futuristic','Intellection','Relator'],work:['Analytical','Discipline','Focus','Futuristic','Responsibility','Restorative']},
+    cebu:{live:['Adaptability','Connectedness','Includer','Positivity','Relator','Woo'],work:['Achiever','Adaptability','Arranger','Communication','Developer','Includer','Restorative','Woo']},
+    baguio:{live:['Belief','Connectedness','Context','Empathy','Ideation','Input','Intellection','Learner'],work:['Belief','Context','Developer','Ideation','Individualization','Input','Intellection','Learner']},
+    qc:{live:['Connectedness','Context','Includer','Input','Learner','Positivity','Relator'],work:['Communication','Context','Developer','Empathy','Ideation','Includer','Individualization','Positivity']},
+    singapore:{live:['Achiever','Consistency','Deliberative','Discipline','Focus'],work:['Achiever','Analytical','Arranger','Command','Competition','Futuristic','Learner','Maximizer','Restorative','Strategic']},
+    amsterdam:{live:['Adaptability','Communication','Ideation','Includer','Input','Positivity','Woo'],work:['Activator','Adaptability','Communication','Futuristic','Ideation','Individualization','Self-Assurance','Strategic','Woo']},
+    zurich:{live:['Analytical','Deliberative','Discipline','Focus','Intellection','Learner'],work:['Analytical','Deliberative','Focus','Input','Intellection','Learner','Maximizer','Responsibility','Restorative','Strategic']},
+    copenhagen:{live:['Adaptability','Belief','Connectedness','Consistency','Harmony','Relator','Responsibility'],work:['Belief','Connectedness','Discipline','Focus','Harmony','Responsibility']}
+  };
   const LABELS = {focus:'space for focused work',social:'access to social and professional networks',creative:'creative opportunities',technical:'technical and research opportunities',enterprise:'business and leadership opportunities',routine:'a structured daily routine',community:'community connections',outdoors:'access to outdoor activities',autonomy:'independent working options'};
   const SOURCES = {
     ayala:['Ayala Land: integrated estates','https://ir.ayalaland.com.ph/about-us/'],
@@ -11,7 +38,9 @@
     amsterdam:['City of Amsterdam: startup ecosystem','https://www.iamsterdam.com/en/business/startupamsterdam'],
     zurich:['Zurich Tourism: technology ecosystem','https://www.zuerich.com/en/business/ict-companies-in-zurich'],
     copenhagen:['City of Copenhagen: cycling','https://international.kk.dk/live/transport-and-parking/cycling-in-copenhagen'],
-    mbti:['Myers & Briggs Foundation: type and careers','https://www.myersbriggs.org/type-in-my-life/personality-type-and-careers/']
+    mbti:['Myers & Briggs Foundation: type and careers','https://www.myersbriggs.org/type-in-my-life/personality-type-and-careers/'],
+    gallup:['Gallup: all 34 CliftonStrengths themes','https://www.gallup.com/cliftonstrengths/en/253715/34-cliftonstrengths-themes.aspx'],
+    domains:['Gallup: the four CliftonStrengths domains','https://www.gallup.com/cliftonstrengths/en/253736/cliftonstrengths-domains.aspx']
   };
   // 1–5 planning ratings for the named districts, not measured city statistics.
   // Separate live/work ratings prevent residential preferences becoming job-market claims.
@@ -61,6 +90,27 @@
   let selected=profiles.find(p=>p.id===params.get('profile')) || profiles.find(p=>p.id===saved?.profile) || profiles[0];
   let scope=['all','ph','international'].includes(params.get('scope'))?params.get('scope'):(['all','ph','international'].includes(saved?.scope)?saved.scope:'all');
   let mode=['any','onsite','remote'].includes(params.get('mode'))?params.get('mode'):(['any','onsite','remote'].includes(saved?.mode)?saved.mode:'any');
+  let selectedStrengths=[...new Set((params.has('strengths')?(params.get('strengths')||'').split(','):(Array.isArray(saved?.strengths)?saved.strengths:[])).filter(t=>THEMES.includes(t)))];
+  let strengthMatch=(params.get('match')||saved?.strengthMatch)==='all'?'all':'any';
+  const initialStrengthDomain=params.has('domain')?params.get('domain'):saved?.strengthDomain;
+  let strengthDomain=Object.hasOwn(STRENGTH_DOMAINS,initialStrengthDomain)?initialStrengthDomain:'all';
+  function strengthTags(place,kind){return STRENGTH_TAGS[place.id]?.[kind]||[];}
+  function matchesStrengths(place,kind){
+    const tags=strengthTags(place,kind);
+    if(strengthDomain!=='all'&&!tags.some(t=>STRENGTH_DOMAINS[strengthDomain].includes(t)))return false;
+    return !selectedStrengths.length||(strengthMatch==='all'?selectedStrengths.every(t=>tags.includes(t)):selectedStrengths.some(t=>tags.includes(t)));
+  }
+  function strengthClass(theme){return ['Executing','Influencing','Relationship Building','Strategic Thinking'].indexOf(Object.keys(STRENGTH_DOMAINS).find(d=>STRENGTH_DOMAINS[d].includes(theme)));}
+  function strengthButtons(tags){return tags.map(t=>`<button type="button" class="p-strength-tag p-domain-${strengthClass(t)}" data-strength="${esc(t)}" aria-pressed="${selectedStrengths.includes(t)}" title="${esc(THEME_ACTIVITIES[t])}">${esc(t)}</button>`).join('');}
+  function setStrengthParams(url){url.searchParams.set('strengths',selectedStrengths.join(','));url.searchParams.set('match',strengthMatch);url.searchParams.set('domain',strengthDomain);}
+  function renderStrengthFilters(){
+    $('p-strength-selected').innerHTML=selectedStrengths.length?strengthButtons(selectedStrengths):'<span class="muted">No themes selected · all tagged places are eligible</span>';
+    $('p-strength-count').textContent=`${selectedStrengths.length} theme${selectedStrengths.length===1?'':'s'} selected`;
+    $('p-strength-options').querySelectorAll('input').forEach(input=>{input.checked=selectedStrengths.includes(input.value);});
+    $('p-strength-match').value=strengthMatch;$('p-strength-domain').value=strengthDomain;
+    $('p-strength-activities').innerHTML=selectedStrengths.map(t=>`<li><b>${esc(t)}:</b> ${esc(THEME_ACTIVITIES[t])}</li>`).join('');
+  }
+  function toggleStrength(theme){if(!THEMES.includes(theme))return;selectedStrengths=selectedStrengths.includes(theme)?selectedStrengths.filter(t=>t!==theme):[...selectedStrengths,theme];persist();renderSelected();}
   function weights(p,kind){return p.type[`${kind}Weights`].map((w,i)=>w+(p.variant.add[DIMS[i]]||0));}
   function effectiveWeights(p,kind){return weights(p,kind).map((v,i)=>kind==='work'&&mode==='remote'&&['technical','enterprise'].includes(DIMS[i])?Math.max(1,v-3):v);}
   function rate(place,p,kind){
@@ -71,7 +121,7 @@
     return adjusted.reduce((sum,v,i)=>sum+v*ratings[i],0)/adjusted.reduce((a,b)=>a+b,0);
   }
   function recommendations(p,kind){
-    return PLACES.filter(c=>(scope==='all'||scope===c.region)&&!(kind==='work'&&mode==='onsite'&&['nuvali','copenhagen'].includes(c.id)))
+    return PLACES.filter(c=>(scope==='all'||scope===c.region)&&!(kind==='work'&&mode==='onsite'&&['nuvali','copenhagen'].includes(c.id))&&matchesStrengths(c,kind))
       .map(place=>({place,value:rate(place,p,kind)})).sort((a,b)=>b.value-a.value||a.place.name.localeCompare(b.place.name)).slice(0,3);
   }
   function reasons(place,p,kind){
@@ -87,6 +137,7 @@
     return `<article class="p-place"><div class="p-place-heading"><span class="p-rank">${index+1}</span><div><h4>${esc(c.name)}</h4><small>${esc(c.country)} · ${index===0?'Leading suggestion':'Alternative to investigate'}</small></div></div>
       <p><b>${kind==='live'?'Living setup':'Working setup'}</b><br>${esc(remote?'Employer-approved remote work from a verified home office or coworking space.':c[kind])}</p>
       <div class="p-why"><b>Why it may fit ${esc(p.id)}</b><span>${esc(why.join(' + '))}.</span></div>
+      <div class="p-place-strengths"><b>CliftonStrengths activity tags</b><div class="p-strength-tags">${strengthButtons(strengthTags(c,kind))}</div>${selectedStrengths.length?`<small>${strengthTags(c,kind).filter(t=>selectedStrengths.includes(t)).length} of ${selectedStrengths.length} selected themes tagged</small>`:''}</div>
       <p>${esc(c.context)}${kind==='work'?` <b>Explore:</b> ${esc(p.type.roles)}. These are role ideas, not verified vacancies.`:''}</p>
       <p><b>Check first</b><br>${esc(c.watch)}${remote?' Confirm broadband, backup power, time zones and employer permission for this exact location.':''}</p>
       <div class="p-links">${sourceLink(c.source)}<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.name)}" target="_blank" rel="noopener noreferrer">Explore area ↗</a>${kind==='work'?`<a href="https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(search)}&location=${encodeURIComponent(c.name)}" target="_blank" rel="noopener noreferrer">Search roles ↗</a>`:''}</div></article>`;
@@ -94,15 +145,19 @@
   function updateURL(){
     if(location.pathname!=='/personality')return;
     const url=new URL(location.href);url.searchParams.set('profile',selected.id);url.searchParams.set('scope',scope);url.searchParams.set('mode',mode);
+    setStrengthParams(url);
     history.replaceState({...history.state},'',url.pathname+url.search);
   }
-  function persist(){try{localStorage.setItem('compass.personality.v1',JSON.stringify({profile:selected.id,scope,mode}));}catch{}updateURL();}
+  function persist(){try{localStorage.setItem('compass.personality.v1',JSON.stringify({profile:selected.id,scope,mode,strengths:selectedStrengths,strengthMatch,strengthDomain}));}catch{}updateURL();}
   function renderSelected(){
-    const p=selected;
-    $('p-profile-summary').innerHTML=`<div class="p-eyebrow">Your selected profile</div><h2>${esc(p.id)} · ${esc(p.type.name)}</h2><p>${esc(p.variant.name)} · ${esc(p.type.group)}</p><p>${esc(p.type.summary)}</p><p>${esc(p.variant.note)}</p><div class="p-chips">${[...new Set([...reasons(recommendations(p,'live')[0].place,p,'live'),...reasons(recommendations(p,'work')[0].place,p,'work')])].map(x=>`<span class="p-chip">${esc(x)}</span>`).join('')}</div>`;
-    $('p-live-results').innerHTML=recommendations(p,'live').map((c,i)=>placeCard(c,i,p,'live')).join('');
-    $('p-work-results').innerHTML=recommendations(p,'work').map((c,i)=>placeCard(c,i,p,'work')).join('');
-    $('p-active-context').textContent=`${scope==='all'?'Philippine and international':scope==='ph'?'Philippine':'International'} candidates · ${mode==='remote'?'remote work from a verified base':mode==='onsite'?'local workplace options to investigate':'local workplace and remote-base options'}. Suggestions compare ${PLACES.filter(x=>scope==='all'||x.region===scope).length} curated places, not every city in the world. Personality fit does not establish affordability, safety, job availability or permission to live and work there.`;
+    const p=selected,live=recommendations(p,'live'),work=recommendations(p,'work');
+    const factors=[...new Set([...(live.length?reasons(live[0].place,p,'live'):[]),...(work.length?reasons(work[0].place,p,'work'):[])])];
+    $('p-profile-summary').innerHTML=`<div class="p-eyebrow">Your selected profile</div><h2>${esc(p.id)} · ${esc(p.type.name)}</h2><p>${esc(p.variant.name)} · ${esc(p.type.group)}</p><p>${esc(p.type.summary)}</p><p>${esc(p.variant.note)}</p><div class="p-chips">${factors.map(x=>`<span class="p-chip">${esc(x)}</span>`).join('')}</div>`;
+    const empty='<div class="p-empty">No place matches these filters. Try Match any, another region, or fewer themes. Clear CliftonStrengths filters to restore the full shortlist.</div>';
+    $('p-live-results').innerHTML=live.length?live.map((c,i)=>placeCard(c,i,p,'live')).join(''):empty;
+    $('p-work-results').innerHTML=work.length?work.map((c,i)=>placeCard(c,i,p,'work')).join(''):empty;
+    $('p-active-context').textContent=`${scope==='all'?'Philippine and international':scope==='ph'?'Philippine':'International'} candidates · ${mode==='remote'?'remote work from a verified base':mode==='onsite'?'local workplace options to investigate':'local workplace and remote-base options'}. ${selectedStrengths.length?`Matching ${strengthMatch} of ${selectedStrengths.length} selected CliftonStrengths themes. `:''}${strengthDomain!=='all'?`${strengthDomain} domain required. `:''}Suggestions compare ${PLACES.filter(x=>scope==='all'||x.region===scope).length} curated places, not every city in the world. Personality fit does not establish affordability, safety, job availability or permission to live and work there.`;
+    renderStrengthFilters();
     renderDirectory();
   }
   function renderDirectory(){
@@ -110,22 +165,24 @@
     const list=profiles.filter(p=>{
       if(group!=='all'&&p.type.group!==group)return false;
       const entries=[...recommendations(p,'live'),...recommendations(p,'work')];
-      return [p.id,p.type.name,p.variant.name,p.type.group,p.type.roles,...entries.map(x=>x.place.name)].join(' ').toLowerCase().includes(query);
+      return [p.id,p.type.name,p.variant.name,p.type.group,p.type.roles,...entries.map(x=>x.place.name),...entries.flatMap(x=>[...strengthTags(x.place,'live'),...strengthTags(x.place,'work')])].join(' ').toLowerCase().includes(query);
     });
     $('p-directory-count').textContent=`${list.length} of 64 profiles shown`;
     $('p-directory-grid').innerHTML=list.length?list.map(p=>{
-      const live=recommendations(p,'live')[0].place,work=recommendations(p,'work')[0].place;
-      return `<article class="p-directory-card" data-selected="${p.id===selected.id}"><h3>${esc(p.id)} <span style="color:var(--txt);font-weight:500">${esc(p.type.name)}</span></h3><p>${esc(p.variant.name)}</p><p><b>Live:</b> ${esc(live.name)}<br><b>${mode==='remote'?'Work remotely from':'Work'}:</b> ${esc(work.name)}</p><button type="button" class="btn sm" data-profile="${p.id}" aria-label="View ${p.id} place recommendations">View profile →</button></article>`;
+      const live=recommendations(p,'live')[0]?.place,work=recommendations(p,'work')[0]?.place;
+      return `<article class="p-directory-card" data-selected="${p.id===selected.id}"><h3>${esc(p.id)} <span style="color:var(--txt);font-weight:500">${esc(p.type.name)}</span></h3><p>${esc(p.variant.name)}</p><p><b>Live:</b> ${esc(live?.name||'No place matches')}<br><b>${mode==='remote'?'Work remotely from':'Work'}:</b> ${esc(work?.name||'No place matches')}</p><button type="button" class="btn sm" data-profile="${p.id}" aria-label="View ${p.id} place recommendations">View profile →</button></article>`;
     }).join(''):'<div class="p-empty">No profiles match. Try a base type such as INTJ, a variant such as Cooperative, or a suggested place.</div>';
   }
   function exportCSV(){
-    const rows=[['Profile','Base type','Variant','Scope','Work mode','Leading live suggestion','Leading work suggestion','Role ideas','Basis'],...profiles.map(p=>[p.id,p.type.name,p.variant.name,scope,mode,recommendations(p,'live')[0].place.name,recommendations(p,'work')[0].place.name,p.type.roles,'Editorial planning heuristic; not validated city-personality matching'])];
+    const rows=[['Profile','Base type','Variant','Scope','Work mode','Selected CliftonStrengths themes','Strengths match mode','Strengths domain','Leading live suggestion','Live activity tags','Leading work suggestion','Work activity tags','Role ideas','Basis'],...profiles.map(p=>{const live=recommendations(p,'live')[0]?.place,work=recommendations(p,'work')[0]?.place;return [p.id,p.type.name,p.variant.name,scope,mode,selectedStrengths.join('; '),strengthMatch,strengthDomain,live?.name||'No place matches',live?strengthTags(live,'live').join('; '):'',work?.name||'No place matches',work?strengthTags(work,'work').join('; '):'',p.type.roles,'Editorial planning heuristic; not validated city-personality or CliftonStrengths matching'];})];
     const csv='\uFEFF'+rows.map(row=>row.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\r\n');
     const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
     const a=document.createElement('a');a.href=url;a.download='compass-64-personality-places.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-    $('p-feedback').textContent='Exported all 64 profiles using your current region and work-mode filters.';
+    $('p-feedback').textContent='Exported all 64 profiles, activity tags and your current personality, location and CliftonStrengths filters.';
   }
   function init(){
+    $('p-strength-options').innerHTML=Object.entries(STRENGTH_DOMAINS).map(([domain,themes],index)=>`<fieldset class="p-strength-group p-domain-${index}"><legend>${esc(domain)}</legend>${themes.map(t=>`<label><input type="checkbox" value="${esc(t)}" /> <span>${esc(t)}</span></label>`).join('')}</fieldset>`).join('');
+    $('p-strength-domain').innerHTML='<option value="all">All domains</option>'+Object.keys(STRENGTH_DOMAINS).map(d=>`<option>${esc(d)}</option>`).join('');
     $('p-type').innerHTML=TYPES.map(t=>`<option value="${t.code}">${t.code} · ${esc(t.name)}</option>`).join('');
     $('p-variant').innerHTML=VARIANTS.map(v=>`<option value="${v.code}">${v.code} · ${esc(v.name)}</option>`).join('');
     $('p-type').value=selected.type.code;$('p-variant').value=selected.variant.code;$('p-scope').value=scope;$('p-mode').value=mode;
@@ -135,10 +192,15 @@
     $('p-scope').addEventListener('change',()=>{scope=$('p-scope').value;persist();renderSelected();});
     $('p-mode').addEventListener('change',()=>{mode=$('p-mode').value;persist();renderSelected();});
     $('p-search').addEventListener('input',renderDirectory);$('p-group').addEventListener('change',renderDirectory);
+    $('p-strength-options').addEventListener('change',event=>{if(event.target.matches('input[type="checkbox"]'))toggleStrength(event.target.value);});
+    $('p-strength-match').addEventListener('change',()=>{strengthMatch=$('p-strength-match').value;persist();renderSelected();});
+    $('p-strength-domain').addEventListener('change',()=>{strengthDomain=$('p-strength-domain').value;persist();renderSelected();});
+    $('p-strength-clear').addEventListener('click',()=>{selectedStrengths=[];strengthDomain='all';strengthMatch='any';persist();renderSelected();$('p-feedback').textContent='CliftonStrengths filters cleared.';});
+    document.querySelector('[data-v="personality"]').addEventListener('click',event=>{const b=event.target.closest('button[data-strength]');if(b)toggleStrength(b.dataset.strength);});
     $('p-directory-grid').addEventListener('click',event=>{const button=event.target.closest('button[data-profile]');if(!button)return;selected=profiles.find(p=>p.id===button.dataset.profile);$('p-type').value=selected.type.code;$('p-variant').value=selected.variant.code;persist();renderSelected();$('p-profile-summary').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});$('p-profile-summary').focus({preventScroll:true});});
     $('p-export').addEventListener('click',exportCSV);
-    $('p-copy').addEventListener('click',async()=>{const url=new URL('/personality',location.origin);url.searchParams.set('profile',selected.id);url.searchParams.set('scope',scope);url.searchParams.set('mode',mode);try{await navigator.clipboard.writeText(url.href);$('p-feedback').textContent='Link copied for '+selected.id;}catch{$('p-feedback').textContent='Share this address: '+url.href;}});
-    addEventListener('popstate',()=>{const q=new URLSearchParams(location.search),p=profiles.find(p=>p.id===q.get('profile'));if(p){selected=p;$('p-type').value=p.type.code;$('p-variant').value=p.variant.code;}if(['all','ph','international'].includes(q.get('scope')))scope=q.get('scope');if(['any','onsite','remote'].includes(q.get('mode')))mode=q.get('mode');$('p-scope').value=scope;$('p-mode').value=mode;renderSelected();});
+    $('p-copy').addEventListener('click',async()=>{const url=new URL('/personality',location.origin);url.searchParams.set('profile',selected.id);url.searchParams.set('scope',scope);url.searchParams.set('mode',mode);setStrengthParams(url);try{await navigator.clipboard.writeText(url.href);$('p-feedback').textContent='Link copied for '+selected.id+' with your CliftonStrengths filters.';}catch{$('p-feedback').textContent='Share this address: '+url.href;}});
+    addEventListener('popstate',()=>{const q=new URLSearchParams(location.search),p=profiles.find(p=>p.id===q.get('profile'));if(p){selected=p;$('p-type').value=p.type.code;$('p-variant').value=p.variant.code;}if(['all','ph','international'].includes(q.get('scope')))scope=q.get('scope');if(['any','onsite','remote'].includes(q.get('mode')))mode=q.get('mode');if(q.has('strengths'))selectedStrengths=[...new Set((q.get('strengths')||'').split(',').filter(t=>THEMES.includes(t)))];if(q.has('match'))strengthMatch=q.get('match')==='all'?'all':'any';if(q.has('domain'))strengthDomain=Object.hasOwn(STRENGTH_DOMAINS,q.get('domain'))?q.get('domain'):'all';$('p-scope').value=scope;$('p-mode').value=mode;renderSelected();});
     renderSelected();
   }
   init();
