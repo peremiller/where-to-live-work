@@ -1,1 +1,7 @@
-{"cleanUrls": true, "trailingSlash": false}
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [{"source": "/:path*", "destination": "/"}],
+  "crons": [{"path": "/api/properties", "schedule": "0 16 * * *"}]
+}

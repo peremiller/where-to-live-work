@@ -1,0 +1,39 @@
+{
+  "projectId": "prj_uruPMc0dlBYGjeNWmdCh3yk27XBL",
+  "baselineDeployment": "dpl_FfbwVTWX1aBvn2r2xmmsi81GTEVY",
+  "note": "The deployed source was newer than master. index.html and public assets were recovered from production. Preserve the following existing Vercel source blobs when publishing; they include the current job and property services and package manifests. The API source files in this Git repository are not a complete mirror of that production baseline.",
+  "preserveFiles": [
+    {
+      "file": "api/jobs.js",
+      "sha": "f100f48ed7fdbad50bb51de6fd65d2f08fc86990"
+    },
+    {
+      "file": "api/properties.js",
+      "sha": "60d8e0ec08dc7052fdb1536e3a94db7e84561d6e"
+    },
+    {
+      "file": "package.json",
+      "sha": "aa944c2de7ba599f3b84387c24a13fc582ded387"
+    },
+    {
+      "file": "package-lock.json",
+      "sha": "a5da8e5963a5169d7f0878e4c3f077bd6f202132"
+    },
+    {
+      "file": "assets/leaflet/leaflet.css",
+      "sha": "ec929f1100c6642ccc5c4272cf4cca12251a9a5d"
+    },
+    {
+      "file": "assets/leaflet/leaflet.js",
+      "sha": "5a640ff863e7902a8cac2ce6ba37c87b30677761"
+    },
+    {
+      "file": "assets/property-general-trias-townhouse.svg",
+      "sha": "c05127b03cfc6e43f6dcaefb1eadef79d4b4d856"
+    },
+    {
+      "file": "assets/property-matina-house.svg",
+      "sha": "641e9f778facf9e8c5e260e4c0ee8d91afdc2034"
+    }
+  ]
+}
