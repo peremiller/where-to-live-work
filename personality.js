@@ -94,6 +94,31 @@
   let strengthMatch=(params.get('match')||saved?.strengthMatch)==='all'?'all':'any';
   const initialStrengthDomain=params.has('domain')?params.get('domain'):saved?.strengthDomain;
   let strengthDomain=Object.hasOwn(STRENGTH_DOMAINS,initialStrengthDomain)?initialStrengthDomain:'all';
+  let draftStrengths=[...selectedStrengths],draftMatch=strengthMatch,draftDomain=strengthDomain;
+  const TOP_STRENGTHS_KEY='compass.top-strengths.v1';
+  let savedTopStrengths=[];
+  try {const data=JSON.parse(localStorage.getItem(TOP_STRENGTHS_KEY));if(Array.isArray(data?.themes))savedTopStrengths=[...new Set(data.themes.filter(t=>THEMES.includes(t)))].slice(0,34);} catch {}
+  let topStrengthsDraft=savedTopStrengths.length?[...savedTopStrengths]:Array(5).fill('');
+  function topStrengthsValue(){return topStrengthsDraft.filter(t=>THEMES.includes(t));}
+  function topStrengthOptions(value,index){return '<option value="">Choose theme #'+(index+1)+'</option>'+Object.entries(STRENGTH_DOMAINS).map(([domain,themes])=>`<optgroup label="${esc(domain)}">${themes.map(t=>`<option value="${esc(t)}"${value===t?' selected':''}${value!==t&&topStrengthsDraft.includes(t)?' disabled':''}>${esc(t)}</option>`).join('')}</optgroup>`).join('');}
+  function renderTopStrengths(message){
+    $('p-top-list').innerHTML=topStrengthsDraft.map((theme,i)=>`<li><span class="p-top-rank" aria-hidden="true">${i+1}</span><label class="p-field" for="p-top-${i}"><span class="p-sr-only">Top strength ${i+1}</span><select id="p-top-${i}" data-top-index="${i}">${topStrengthOptions(theme,i)}</select></label><div class="p-top-move"><button type="button" class="btn sm" data-top-move="${i}" data-direction="-1" aria-label="Move strength ${i+1} up"${i===0?' disabled':''}>↑</button><button type="button" class="btn sm" data-top-move="${i}" data-direction="1" aria-label="Move strength ${i+1} down"${i===topStrengthsDraft.length-1?' disabled':''}>↓</button><button type="button" class="btn sm" data-top-remove="${i}" aria-label="Remove strength ${i+1}">Remove</button></div></li>`).join('')||'<li class="muted">Add a theme to start your ranked list.</li>';
+    $('p-top-add').disabled=topStrengthsDraft.length>=34;
+    const values=topStrengthsValue(),changed=JSON.stringify(values)!==JSON.stringify(savedTopStrengths);
+    $('p-top-status').textContent=message||`${values.length} theme${values.length===1?'':'s'} entered${changed?' · unsaved edits':savedTopStrengths.length?' · saved on this device':' · no saved top-strengths profile'}. Place results change only when you click Apply.`;
+  }
+  function saveTopStrengths(apply=false){
+    const themes=topStrengthsValue();
+    if(!themes.length){$('p-top-status').textContent='Choose at least one top strength before saving or applying.';return false;}
+    if(new Set(themes).size!==themes.length){$('p-top-status').textContent='Each top strength must be unique.';return false;}
+    let stored=true;try{localStorage.setItem(TOP_STRENGTHS_KEY,JSON.stringify({themes}));}catch{stored=false;}
+    savedTopStrengths=[...themes];topStrengthsDraft=[...themes];
+    renderTopStrengths(stored?'Top strengths saved in ranked order. Current place results stay in place.':'Top strengths are available for this visit; this browser could not save them.');
+    if(apply){draftStrengths=[...themes];applyStrengthFilters();$('p-top-status').textContent=stored?'Saved and applied your '+themes.length+' top strength'+(themes.length===1?'':'s')+'.':'Applied your top strengths for this visit; this browser could not save them.';}
+    return true;
+  }
+  function syncStrengthDraft(){draftStrengths=[...selectedStrengths];draftMatch=strengthMatch;draftDomain=strengthDomain;}
+  function applyStrengthFilters(){selectedStrengths=[...draftStrengths];strengthMatch=draftMatch;strengthDomain=draftDomain;persist();renderSelected();$('p-feedback').textContent='CliftonStrengths filters applied to the place suggestions.';}
   function strengthTags(place,kind){return STRENGTH_TAGS[place.id]?.[kind]||[];}
   function matchesStrengths(place,kind){
     const tags=strengthTags(place,kind);
@@ -101,16 +126,18 @@
     return !selectedStrengths.length||(strengthMatch==='all'?selectedStrengths.every(t=>tags.includes(t)):selectedStrengths.some(t=>tags.includes(t)));
   }
   function strengthClass(theme){return ['Executing','Influencing','Relationship Building','Strategic Thinking'].indexOf(Object.keys(STRENGTH_DOMAINS).find(d=>STRENGTH_DOMAINS[d].includes(theme)));}
-  function strengthButtons(tags){return tags.map(t=>`<button type="button" class="p-strength-tag p-domain-${strengthClass(t)}" data-strength="${esc(t)}" aria-pressed="${selectedStrengths.includes(t)}" title="${esc(THEME_ACTIVITIES[t])}">${esc(t)}</button>`).join('');}
+  function strengthButtons(tags,pending=false){return tags.map(t=>`<button type="button" class="p-strength-tag p-domain-${strengthClass(t)}" data-strength="${esc(t)}" aria-pressed="${(pending?draftStrengths:selectedStrengths).includes(t)}" title="${esc(THEME_ACTIVITIES[t])}">${esc(t)}</button>`).join('');}
   function setStrengthParams(url){url.searchParams.set('strengths',selectedStrengths.join(','));url.searchParams.set('match',strengthMatch);url.searchParams.set('domain',strengthDomain);}
   function renderStrengthFilters(){
-    $('p-strength-selected').innerHTML=selectedStrengths.length?strengthButtons(selectedStrengths):'<span class="muted">No themes selected · all tagged places are eligible</span>';
-    $('p-strength-count').textContent=`${selectedStrengths.length} theme${selectedStrengths.length===1?'':'s'} selected`;
-    $('p-strength-options').querySelectorAll('input').forEach(input=>{input.checked=selectedStrengths.includes(input.value);});
-    $('p-strength-match').value=strengthMatch;$('p-strength-domain').value=strengthDomain;
-    $('p-strength-activities').innerHTML=selectedStrengths.map(t=>`<li><b>${esc(t)}:</b> ${esc(THEME_ACTIVITIES[t])}</li>`).join('');
+    $('p-strength-selected').innerHTML=draftStrengths.length?strengthButtons(draftStrengths,true):'<span class="muted">No themes selected for the next filter</span>';
+    $('p-strength-count').textContent=`${selectedStrengths.length} applied · ${draftStrengths.length} selected`;
+    $('p-strength-options').querySelectorAll('input').forEach(input=>{input.checked=draftStrengths.includes(input.value);});
+    $('p-strength-match').value=draftMatch;$('p-strength-domain').value=draftDomain;
+    const pending=JSON.stringify(draftStrengths)!==JSON.stringify(selectedStrengths)||draftMatch!==strengthMatch||draftDomain!==strengthDomain;
+    $('p-strength-pending').textContent=pending?'Changes pending · click Apply to update places.':'Showing applied filters.';$('p-strength-apply').disabled=!pending;
+    $('p-strength-activities').innerHTML=draftStrengths.map(t=>`<li><b>${esc(t)}:</b> ${esc(THEME_ACTIVITIES[t])}</li>`).join('');
   }
-  function toggleStrength(theme){if(!THEMES.includes(theme))return;selectedStrengths=selectedStrengths.includes(theme)?selectedStrengths.filter(t=>t!==theme):[...selectedStrengths,theme];persist();renderSelected();}
+  function toggleStrength(theme){if(!THEMES.includes(theme))return;draftStrengths=draftStrengths.includes(theme)?draftStrengths.filter(t=>t!==theme):[...draftStrengths,theme];renderStrengthFilters();}
   function weights(p,kind){return p.type[`${kind}Weights`].map((w,i)=>w+(p.variant.add[DIMS[i]]||0));}
   function effectiveWeights(p,kind){return weights(p,kind).map((v,i)=>kind==='work'&&mode==='remote'&&['technical','enterprise'].includes(DIMS[i])?Math.max(1,v-3):v);}
   function rate(place,p,kind){
@@ -174,7 +201,7 @@
     }).join(''):'<div class="p-empty">No profiles match. Try a base type such as INTJ, a variant such as Cooperative, or a suggested place.</div>';
   }
   function exportCSV(){
-    const rows=[['Profile','Base type','Variant','Scope','Work mode','Selected CliftonStrengths themes','Strengths match mode','Strengths domain','Leading live suggestion','Live activity tags','Leading work suggestion','Work activity tags','Role ideas','Basis'],...profiles.map(p=>{const live=recommendations(p,'live')[0]?.place,work=recommendations(p,'work')[0]?.place;return [p.id,p.type.name,p.variant.name,scope,mode,selectedStrengths.join('; '),strengthMatch,strengthDomain,live?.name||'No place matches',live?strengthTags(live,'live').join('; '):'',work?.name||'No place matches',work?strengthTags(work,'work').join('; '):'',p.type.roles,'Editorial planning heuristic; not validated city-personality or CliftonStrengths matching'];})];
+    const rows=[['Profile','Base type','Variant','Scope','Work mode','Saved top CliftonStrengths (ranked)','Applied CliftonStrengths themes','Strengths match mode','Strengths domain','Leading live suggestion','Live activity tags','Leading work suggestion','Work activity tags','Role ideas','Basis'],...profiles.map(p=>{const live=recommendations(p,'live')[0]?.place,work=recommendations(p,'work')[0]?.place;return [p.id,p.type.name,p.variant.name,scope,mode,savedTopStrengths.map((t,i)=>`${i+1}. ${t}`).join('; '),selectedStrengths.join('; '),strengthMatch,strengthDomain,live?.name||'No place matches',live?strengthTags(live,'live').join('; '):'',work?.name||'No place matches',work?strengthTags(work,'work').join('; '):'',p.type.roles,'Editorial planning heuristic; not validated city-personality or CliftonStrengths matching'];})];
     const csv='\uFEFF'+rows.map(row=>row.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\r\n');
     const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
     const a=document.createElement('a');a.href=url;a.download='compass-64-personality-places.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -193,14 +220,22 @@
     $('p-mode').addEventListener('change',()=>{mode=$('p-mode').value;persist();renderSelected();});
     $('p-search').addEventListener('input',renderDirectory);$('p-group').addEventListener('change',renderDirectory);
     $('p-strength-options').addEventListener('change',event=>{if(event.target.matches('input[type="checkbox"]'))toggleStrength(event.target.value);});
-    $('p-strength-match').addEventListener('change',()=>{strengthMatch=$('p-strength-match').value;persist();renderSelected();});
-    $('p-strength-domain').addEventListener('change',()=>{strengthDomain=$('p-strength-domain').value;persist();renderSelected();});
-    $('p-strength-clear').addEventListener('click',()=>{selectedStrengths=[];strengthDomain='all';strengthMatch='any';persist();renderSelected();$('p-feedback').textContent='CliftonStrengths filters cleared.';});
+    $('p-strength-match').addEventListener('change',()=>{draftMatch=$('p-strength-match').value;renderStrengthFilters();});
+    $('p-strength-domain').addEventListener('change',()=>{draftDomain=$('p-strength-domain').value;renderStrengthFilters();});
+    $('p-strength-apply').addEventListener('click',applyStrengthFilters);
+    $('p-strength-clear').addEventListener('click',()=>{draftStrengths=[];draftDomain='all';draftMatch='any';applyStrengthFilters();$('p-feedback').textContent='CliftonStrengths filters cleared. Your saved top strengths are kept.';});
+    $('p-top-list').addEventListener('change',event=>{const index=Number(event.target.dataset.topIndex);if(!Number.isInteger(index)||index<0||index>=topStrengthsDraft.length)return;const value=event.target.value;if(value&&!THEMES.includes(value))return;topStrengthsDraft[index]=value;renderTopStrengths();$('p-top-'+index)?.focus();});
+    $('p-top-list').addEventListener('click',event=>{const move=event.target.closest('button[data-top-move]'),remove=event.target.closest('button[data-top-remove]');if(move){const i=Number(move.dataset.topMove),j=i+Number(move.dataset.direction);if(j<0||j>=topStrengthsDraft.length)return;[topStrengthsDraft[i],topStrengthsDraft[j]]=[topStrengthsDraft[j],topStrengthsDraft[i]];renderTopStrengths();$('p-top-'+j)?.focus();}else if(remove){const i=Number(remove.dataset.topRemove);topStrengthsDraft.splice(i,1);renderTopStrengths();($('p-top-'+Math.min(i,topStrengthsDraft.length-1))||$('p-top-add')).focus();}});
+    $('p-top-add').addEventListener('click',()=>{if(topStrengthsDraft.length>=34)return;topStrengthsDraft.push('');renderTopStrengths();$('p-top-'+(topStrengthsDraft.length-1))?.focus();});
+    $('p-top-save').addEventListener('click',()=>saveTopStrengths());
+    $('p-top-apply').addEventListener('click',()=>saveTopStrengths(true));
+    $('p-top-clear').addEventListener('click',()=>{let cleared=true;try{localStorage.removeItem(TOP_STRENGTHS_KEY);}catch{cleared=false;}savedTopStrengths=[];topStrengthsDraft=Array(5).fill('');renderTopStrengths(cleared?'Saved top strengths cleared. Current place filters stay in place.':'Top strengths cleared for this visit; this browser could not clear its saved copy.');});
     document.querySelector('[data-v="personality"]').addEventListener('click',event=>{const b=event.target.closest('button[data-strength]');if(b)toggleStrength(b.dataset.strength);});
     $('p-directory-grid').addEventListener('click',event=>{const button=event.target.closest('button[data-profile]');if(!button)return;selected=profiles.find(p=>p.id===button.dataset.profile);$('p-type').value=selected.type.code;$('p-variant').value=selected.variant.code;persist();renderSelected();$('p-profile-summary').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});$('p-profile-summary').focus({preventScroll:true});});
     $('p-export').addEventListener('click',exportCSV);
     $('p-copy').addEventListener('click',async()=>{const url=new URL('/personality',location.origin);url.searchParams.set('profile',selected.id);url.searchParams.set('scope',scope);url.searchParams.set('mode',mode);setStrengthParams(url);try{await navigator.clipboard.writeText(url.href);$('p-feedback').textContent='Link copied for '+selected.id+' with your CliftonStrengths filters.';}catch{$('p-feedback').textContent='Share this address: '+url.href;}});
-    addEventListener('popstate',()=>{const q=new URLSearchParams(location.search),p=profiles.find(p=>p.id===q.get('profile'));if(p){selected=p;$('p-type').value=p.type.code;$('p-variant').value=p.variant.code;}if(['all','ph','international'].includes(q.get('scope')))scope=q.get('scope');if(['any','onsite','remote'].includes(q.get('mode')))mode=q.get('mode');if(q.has('strengths'))selectedStrengths=[...new Set((q.get('strengths')||'').split(',').filter(t=>THEMES.includes(t)))];if(q.has('match'))strengthMatch=q.get('match')==='all'?'all':'any';if(q.has('domain'))strengthDomain=Object.hasOwn(STRENGTH_DOMAINS,q.get('domain'))?q.get('domain'):'all';$('p-scope').value=scope;$('p-mode').value=mode;renderSelected();});
+    addEventListener('popstate',()=>{const q=new URLSearchParams(location.search),p=profiles.find(p=>p.id===q.get('profile'));if(p){selected=p;$('p-type').value=p.type.code;$('p-variant').value=p.variant.code;}if(['all','ph','international'].includes(q.get('scope')))scope=q.get('scope');if(['any','onsite','remote'].includes(q.get('mode')))mode=q.get('mode');if(q.has('strengths'))selectedStrengths=[...new Set((q.get('strengths')||'').split(',').filter(t=>THEMES.includes(t)))];if(q.has('match'))strengthMatch=q.get('match')==='all'?'all':'any';if(q.has('domain'))strengthDomain=Object.hasOwn(STRENGTH_DOMAINS,q.get('domain'))?q.get('domain'):'all';$('p-scope').value=scope;$('p-mode').value=mode;syncStrengthDraft();renderSelected();});
+    renderTopStrengths();
     renderSelected();
   }
   init();
