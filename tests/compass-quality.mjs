@@ -34,12 +34,12 @@ try{
     const context=await browser.newContext({viewport:{width,height},colorScheme:scheme});
     await context.route(/^https:\/\//u,route=>route.abort('blockedbyclient'));
     const page=await context.newPage();
-    await page.goto(`http://127.0.0.1:${port}/priorities?src=quality#main-content`,{waitUntil:'domcontentloaded'});
+    await page.goto(`http://127.0.0.1:${port}/priorities?src=quality#retain-me`,{waitUntil:'domcontentloaded'});
     await page.locator('#weight-live-career').waitFor();
     assert.equal(await page.locator('.view.active').getAttribute('data-v'),'priorities');
     assert.equal(await page.locator('#weight-live-career').getAttribute('aria-describedby'),'wv-live-career');
     assert.equal(await page.locator('label[for="weight-live-career"]').count(),1);
-    assert.equal(await page.locator('#propertyFreshness').textContent(),'Daily feed temporarily unavailable');
+    await page.waitForFunction(() => document.getElementById('propertyFreshness')?.textContent === 'Daily feed temporarily unavailable');
     await page.keyboard.press('Tab');
     assert.equal(await page.evaluate(()=>document.activeElement.classList.contains('skip-link')),true);
     await page.keyboard.press('Enter');
