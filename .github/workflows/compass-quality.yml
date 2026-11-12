@@ -1,0 +1,33 @@
+name: Compass Web Quality
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check inline JavaScript syntax and verify route rewrites
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, json
+          s=pathlib.Path('index.html').read_text()
+          scripts=re.findall(r'<script(?:\\s[^>]*)?>(.*?)</script>',s,re.S)
+          assert scripts, 'missing inline script'
+          pathlib.Path('/tmp/compass-inline.js').write_text('\\n'.join(scripts))
+          assert json.loads(pathlib.Path('vercel.json').read_text())['rewrites'], 'deep-link rewrite missing'
+          PY
+          node --check /tmp/compass-inline.js
+      - name: Install isolated Chromium test harness
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test keyboard, deep links, persistence and offline errors in real Chromium
+        run: node tests/compass-quality.mjs
