@@ -119,6 +119,9 @@
   body{min-height:100vh;background:radial-gradient(circle at 74% 0,rgba(42,96,148,.08),transparent 30%),var(--bg);font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;letter-spacing:-.01em}
   button,select,input,textarea{font:inherit}
   button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid #71a7ff;outline-offset:2px}
+  .skip-link{position:fixed;top:8px;left:8px;z-index:999;transform:translateY(-160%);background:#fff;color:#101820;border:2px solid #347bea;border-radius:8px;padding:10px 16px;font-weight:700}
+  .skip-link:focus{transform:none}
+  .view:focus{outline:3px solid #71a7ff;outline-offset:3px}
   header.top{position:fixed;inset:0 auto 0 0;width:244px;max-width:none;height:100vh;margin:0;padding:22px 12px;border-right:1px solid var(--line-soft);background:rgba(7,17,29,.98);z-index:20}
   .brand{padding:0 8px;gap:10px}
   .brand .logo{width:42px;height:42px;border:1px solid #dce7f2;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:24px;flex:0 0 auto}
@@ -214,6 +217,7 @@ html :is(.tabs,.toolbar,.filter-bar,.filters,.actions,.button-row,.dialog-action
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <header class="top">
   <div class="brand">
     <div class="logo" aria-hidden="true"><i class="ri-compass-3-line"></i></div>
@@ -228,8 +232,8 @@ html :is(.tabs,.toolbar,.filter-bar,.filters,.actions,.button-row,.dialog-action
   </div>
 </header>
 
-<div class="wrap">
-  <div class="tabs" id="tabs"></div>
+<div class="wrap" id="main-content" role="main" tabindex="-1">
+  <nav class="tabs" id="tabs" aria-label="App sections"></nav>
 
   <!-- OVERVIEW -->
   <section class="view active" data-v="overview">
@@ -1150,15 +1154,21 @@ const TABS=[
 ];
 function buildTabs(){
   document.getElementById("tabs").innerHTML = TABS.map(([k,l,icon],i)=>
-    `<button type="button" class="tab${i===0?' active':''}" data-t="${k}" onclick="go('${k}')" aria-selected="${i===0?'true':'false'}"><i class="${icon}" aria-hidden="true"></i><span>${l}</span></button>`).join("");
+    `<button type="button" class="tab${i===0?' active':''}" data-t="${k}" onclick="go('${k}')" aria-current="${i===0?'page':'false'}"><i class="${icon}" aria-hidden="true"></i><span>${l}</span></button>`).join("");
 }
 function go(k,push=true){
   if(!document.querySelector(`.view[data-v="${k}"]`))k="overview";
-  document.querySelectorAll(".tab").forEach(t=>{const active=t.dataset.t===k;t.classList.toggle("active",active);t.setAttribute("aria-selected",String(active));});
+  const view=document.querySelector(`.view[data-v="${k}"]`);
+  const changed=!view.classList.contains("active");
+  document.querySelectorAll(".tab").forEach(t=>{const active=t.dataset.t===k;t.classList.toggle("active",active);t.setAttribute("aria-current",active?"page":"false");});
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.dataset.v===k));
   const path=k==="overview"?"/":`/${k}`;
-  if(push&&window.location.pathname!==path)history.pushState({view:k},"",path);
+  // Keep unrelated source/share query parameters and the existing fragment intact.
+  const url=new URL(window.location.href);
+  url.pathname=path;
+  if(push&&window.location.pathname!==path)history.pushState({view:k},"",url);
   if(k==="overview"&&overviewMap)setTimeout(()=>overviewMap.invalidateSize(),80);
+  if(push&&changed){view.tabIndex=-1;view.focus({preventScroll:true});}
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
@@ -1350,8 +1360,8 @@ function renderWeights(){
 }
 function wrow(kind,k,l){
   const v=state.weights[kind][k];
-  return `<div class="wrow"><label>${l}</label>
-    <input type="range" min="0" max="40" value="${v}" oninput="setW('${kind}','${k}',this.value)">
+  return `<div class="wrow"><label for="weight-${kind}-${k}">${safe(l)}</label>
+    <input id="weight-${kind}-${k}" type="range" min="0" max="40" value="${v}" aria-describedby="wv-${kind}-${k}" oninput="setW('${kind}','${k}',this.value)">
     <div class="wv" id="wv-${kind}-${k}">${v}</div></div>`;
 }
 function setW(kind,k,v){
