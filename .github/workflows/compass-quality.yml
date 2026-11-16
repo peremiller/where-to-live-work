@@ -2,6 +2,11 @@ name: Compass Web Quality
 on:
   push:
     branches: [master]
+  pull_request:
+    paths:
+      - 'api/jobs.js'
+      - 'tests/compass-quality.mjs'
+      - '.github/workflows/compass-quality.yml'
   workflow_dispatch:
 permissions:
   contents: read

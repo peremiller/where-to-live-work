@@ -14,6 +14,19 @@ const BOARDS = [
     careers: "https://zapier.com/jobs", match: /program manager/i },
 ];
 
+// ATS feeds are external. Never pass executable/relative URLs to the UI.
+function safePostingUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return "";
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:" || !parsed.hostname ||
+        parsed.username || parsed.password) return "";
+    return parsed.href;
+  } catch {
+    return "";
+  }
+}
+
 async function fetchGreenhouse(token, match) {
   const r = await fetch(`https://boards-api.greenhouse.io/v1/boards/${token}/jobs`, {
     headers: { "User-Agent": "Compass/1.0 (+vercel)" },
@@ -22,7 +35,8 @@ async function fetchGreenhouse(token, match) {
   const data = await r.json();
   return (data.jobs || [])
     .filter((j) => match.test(j.title || ""))
-    .map((j) => ({ title: (j.title || "").trim(), location: (j.location && j.location.name) || "", url: j.absolute_url }));
+    .map((j) => ({ title: (j.title || "").trim(), location: (j.location && j.location.name) || "", url: safePostingUrl(j.absolute_url) }))
+    .filter((j) => j.url);
 }
 
 async function fetchAshby(org, match) {
@@ -36,7 +50,7 @@ async function fetchAshby(org, match) {
     .map((j) => ({
       title: (j.title || "").trim(),
       location: j.locationName || (typeof j.location === "string" ? j.location : (j.location && j.location.name)) || "",
-      url: j.applyUrl || j.jobUrl || j.jobPostingUrl || "",
+      url: safePostingUrl(j.applyUrl || j.jobUrl || j.jobPostingUrl || ""),
     }))
     .filter((j) => j.url);
 }
