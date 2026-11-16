@@ -7,6 +7,53 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 
 const root = process.cwd();
+
+// ATS URLs must be HTTPS and absolute before the frontend receives them.
+// Mock external boards so this test never calls private accounts or live ATS endpoints.
+const handlerSource = await readFile(path.join(root, 'api/jobs.js'), 'utf8');
+const { default: jobsHandler } = await import('data:text/javascript;base64,' + Buffer.from(handlerSource).toString('base64'));
+const priorFetch = globalThis.fetch;
+try {
+  globalThis.fetch = async (url) => ({
+    ok: true,
+    json: async () => String(url).includes('ashbyhq')
+      ? { jobs: [
+          { title: 'Program Manager', isListed: true, applyUrl: 'https://jobs.ashbyhq.com/zapier/opening' },
+          { title: 'Program Manager', isListed: true, applyUrl: 'javascript:alert(1)' },
+          { title: 'Program Manager', isListed: true, applyUrl: '//example.test/phish' },
+        ] }
+      : { jobs: [
+          { title: 'Program Manager', absolute_url: 'https://job-boards.greenhouse.io/example/role' },
+          { title: 'Program Manager', absolute_url: 'data:text/html,unsafe' },
+          { title: 'Program Manager', absolute_url: 'https://user:pass@example.test/role' },
+        ] },
+  });
+  const response = {
+    headers: {},
+    statusCode: null,
+    payload: null,
+    setHeader(name, value) { this.headers[name] = value; },
+    status(code) { this.statusCode = code; return this; },
+    json(payload) { this.payload = payload; return this; },
+  };
+  await jobsHandler({ method: 'GET' }, response);
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.payload.companies.length, 3);
+  assert.deepEqual(response.payload.companies.map(company => company.postings.length), [1, 1, 1]);
+  for (const company of response.payload.companies) {
+    for (const job of company.postings) {
+      const url = new URL(job.url);
+      assert.equal(url.protocol, 'https:');
+      assert.equal(url.username, '');
+      assert.equal(url.password, '');
+    }
+  }
+  assert.equal(response.headers['Access-Control-Allow-Origin'], '*');
+  assert.ok(!Number.isNaN(Date.parse(response.payload.fetchedAt)));
+  console.log('PASS: external ATS link validation; legitimate HTTPS links kept, unsafe links rejected.');
+} finally {
+  globalThis.fetch = priorFetch;
+}
 const pages = new Set(['/', '/overview', '/personality', '/live', '/work', '/properties', '/cars', '/compare', '/priorities', '/profile', '/data']);
 const types = { '.html':'text/html; charset=utf-8', '.js':'text/javascript', '.css':'text/css', '.svg':'image/svg+xml', '.png':'image/png' };
 const server=createServer(async (req,res)=>{
