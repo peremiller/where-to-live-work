@@ -42,7 +42,7 @@ async function fetchAshby(org, match) {
 }
 
 export default async function handler(req, res) {
-  const companies = await Promise.all(
+  const results = await Promise.all(
     BOARDS.map(async (b) => {
       try {
         const postings =
@@ -52,12 +52,21 @@ export default async function handler(req, res) {
         return { company: b.company, via: b.via, careers: b.careers, postings: postings.slice(0, 4) };
       } catch (e) {
         // On any ATS failure, return an empty (→ front-end keeps snapshot / shows search).
-        return { company: b.company, via: b.via, careers: b.careers, postings: [], error: String(e && e.message || e) };
+        return { company: b.company, error: true };
       }
     })
   );
+  // A failed ATS request does not mean zero open jobs. Exclude failures so
+  // the client preserves previous verified links and titles for those employers.
+  const companies = results.filter(c => !c.error);
+  const failedCompanies = results.filter(c => c.error).map(c => c.company);
   // Edge cache ~1h, serve stale while revalidating.
   res.setHeader("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=86400");
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.status(200).json({ fetchedAt: new Date().toISOString(), companies });
+  res.status(200).json({
+    fetchedAt: companies.length ? new Date().toISOString() : null,
+    partial: failedCompanies.length > 0,
+    failedCompanies,
+    companies,
+  });
 }
