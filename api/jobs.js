@@ -17,6 +17,8 @@ const BOARDS = [
 async function fetchGreenhouse(token, match) {
   const r = await fetch(`https://boards-api.greenhouse.io/v1/boards/${token}/jobs`, {
     headers: { "User-Agent": "Compass/1.0 (+vercel)" },
+    // Bound third-party ATS latency so one stalled provider cannot hang the entire feed.
+    signal: AbortSignal.timeout(8000),
   });
   if (!r.ok) throw new Error(`greenhouse ${token} ${r.status}`);
   const data = await r.json();
@@ -28,6 +30,8 @@ async function fetchGreenhouse(token, match) {
 async function fetchAshby(org, match) {
   const r = await fetch(`https://api.ashbyhq.com/posting-api/job-board/${org}?includeCompensation=true`, {
     headers: { "User-Agent": "Compass/1.0 (+vercel)" },
+    // Bound third-party ATS latency so one stalled provider cannot hang the entire feed.
+    signal: AbortSignal.timeout(8000),
   });
   if (!r.ok) throw new Error(`ashby ${org} ${r.status}`);
   const data = await r.json();
