@@ -61,3 +61,28 @@ test('UI distinguishes partial ATS freshness and retains snapshot on all failure
   assert.match(html, /if\(window\.__liveAsOf\)/);
   assert.match(html, /const job=findJob\(c\.company\)/);
 });
+
+
+test('every ATS provider gets a finite request timeout without changing successful results', async () => {
+  const originalTimeout = AbortSignal.timeout;
+  const durations = [];
+  const requested = [];
+  AbortSignal.timeout = (ms) => {
+    durations.push(ms);
+    return originalTimeout(ms);
+  };
+  try {
+    const payload = await callApi(async (url, options) => {
+      requested.push({ url: String(url), signal: options?.signal });
+      return emptySuccess();
+    });
+    assert.deepEqual(durations, [8000, 8000, 8000]);
+    assert.equal(requested.filter(r => r.url.includes('greenhouse.io')).length, 2);
+    assert.equal(requested.filter(r => r.url.includes('ashbyhq.com')).length, 1);
+    assert.ok(requested.every(r => r.signal instanceof AbortSignal));
+    assert.equal(payload.partial, false);
+    assert.equal(payload.companies.length, 3);
+  } finally {
+    AbortSignal.timeout = originalTimeout;
+  }
+});
