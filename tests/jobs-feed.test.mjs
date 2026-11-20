@@ -86,3 +86,36 @@ test('every ATS provider gets a finite request timeout without changing successf
     AbortSignal.timeout = originalTimeout;
   }
 });
+
+test('ATS application links reject executable, insecure and credentialed URLs', async () => {
+  const greenhouse = {
+    jobs: [
+      { title: 'Program Manager', absolute_url: 'https://jobs.example.org/positions/42?from=ats', location: { name: 'Remote' } },
+      { title: 'Program Manager', absolute_url: 'javascript:alert(1)' },
+      { title: 'Program Manager', absolute_url: 'http://jobs.example.org/insecure' },
+      { title: 'Program Manager', absolute_url: 'https://user:password@jobs.example.org/private' },
+      { title: 'Program Manager', absolute_url: '/relative/job/99' }
+    ]
+  };
+  const ashby = {
+    jobs: [
+      { title: 'Program Manager', isListed: true, applyUrl: 'https://jobs.example.org/ashby/62' },
+      { title: 'Program Manager', isListed: true, jobUrl: 'data:text/html,unsafe' },
+      { title: 'Program Manager', isListed: true, jobPostingUrl: 'http://jobs.example.org/unsafe' }
+    ]
+  };
+  const result = await callApi(async url => ({
+    ok: true,
+    json: async () => String(url).includes('ashbyhq.com') ? ashby : greenhouse
+  }));
+  assert.equal(result.partial, false);
+  assert.equal(result.companies.length, 3);
+  for (const c of result.companies) {
+    assert.equal(c.postings.length, 1, c.company);
+    assert.ok(c.postings[0].url.startsWith('https://jobs.example.org/'));
+  }
+  assert.equal(result.companies.find(c => c.company === 'Zapier').postings[0].url,
+    'https://jobs.example.org/ashby/62');
+  assert.ok(Number.isFinite(Date.parse(result.fetchedAt)));
+  assert.doesNotMatch(JSON.stringify(result), /javascript:|data:text|user:password|http:\/\/jobs|\/relative\/job/);
+});
