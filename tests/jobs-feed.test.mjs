@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 const source = await readFile(new URL('../api/jobs.js', import.meta.url), 'utf8');
 const { default: handler } = await import('data:text/javascript,' + encodeURIComponent(source));
 
-async function callApi(mockFetch) {
+async function callApi(mockFetch, { withHeaders = false } = {}) {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = mockFetch;
   try {
@@ -19,8 +19,8 @@ async function callApi(mockFetch) {
     };
     await handler({}, res);
     assert.ok(result, 'handler must return a response');
-    assert.equal(headers['Cache-Control'], 'public, s-maxage=3600, stale-while-revalidate=86400');
-    return result;
+    assert.equal(headers['Cache-Control'], result.partial ? 'no-store' : 'public, s-maxage=3600, stale-while-revalidate=86400');
+    return withHeaders ? { payload: result, headers } : result;
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -52,6 +52,23 @@ test('successfully empty boards remain valid empty results', async () => {
   assert.equal(payload.companies.length, 3);
   assert.ok(payload.companies.every(c => c.postings.length === 0));
   assert.ok(!Number.isNaN(Date.parse(payload.fetchedAt)));
+});
+
+test('partial and total ATS outages cannot be cached as a fresh complete feed', async () => {
+  const failed = await callApi(async () => { throw Error('temporary provider outage'); }, { withHeaders: true });
+  assert.equal(failed.payload.partial, true);
+  assert.equal(failed.payload.fetchedAt, null);
+  assert.equal(failed.headers['Cache-Control'], 'no-store');
+
+  const mixed = await callApi(async url => String(url).includes('/gitlab/')
+    ? Promise.reject(Error('temporary provider outage'))
+    : emptySuccess(), { withHeaders: true });
+  assert.equal(mixed.payload.partial, true);
+  assert.equal(mixed.headers['Cache-Control'], 'no-store');
+
+  const complete = await callApi(emptySuccess, { withHeaders: true });
+  assert.equal(complete.payload.partial, false);
+  assert.equal(complete.headers['Cache-Control'], 'public, s-maxage=3600, stale-while-revalidate=86400');
 });
 
 test('UI distinguishes partial ATS freshness and retains snapshot on all failures', async () => {

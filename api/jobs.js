@@ -78,8 +78,11 @@ export default async function handler(req, res) {
   // the client preserves previous verified links and titles for those employers.
   const companies = results.filter(c => !c.error);
   const failedCompanies = results.filter(c => c.error).map(c => c.company);
-  // Edge cache ~1h, serve stale while revalidating.
-  res.setHeader("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=86400");
+  // Cache successful complete refreshes, but never cache partial/total ATS outages:
+  // clients must be able to retry promptly while preserving their saved links.
+  res.setHeader("Cache-Control", failedCompanies.length
+    ? "no-store"
+    : "public, s-maxage=3600, stale-while-revalidate=86400");
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.status(200).json({
     fetchedAt: companies.length ? new Date().toISOString() : null,
