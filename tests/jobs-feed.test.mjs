@@ -136,3 +136,19 @@ test('ATS application links reject executable, insecure and credentialed URLs', 
   assert.ok(Number.isFinite(Date.parse(result.fetchedAt)));
   assert.doesNotMatch(JSON.stringify(result), /javascript:|data:text|user:password|http:\/\/jobs|\/relative\/job/);
 });
+
+
+test('malformed successful ATS payloads cannot erase previous verified links', async () => {
+  for (const malformed of [{}, { jobs: null }, { jobs: {} }, null]) {
+    const result = await callApi(async url => String(url).includes('/gitlab/')
+      ? { ok: true, json: async () => malformed }
+      : emptySuccess());
+    assert.equal(result.partial, true);
+    assert.deepEqual(result.failedCompanies, ['GitLab']);
+    assert.deepEqual(result.companies.map(c => c.company), ['Anthropic', 'Zapier']);
+  }
+  const allMalformed = await callApi(async () => ({ ok: true, json: async () => ({}) }));
+  assert.equal(allMalformed.fetchedAt, null);
+  assert.equal(allMalformed.partial, true);
+  assert.deepEqual(allMalformed.companies, []);
+});
