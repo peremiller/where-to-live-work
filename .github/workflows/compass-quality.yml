@@ -2,6 +2,8 @@ name: Compass Web Quality
 on:
   push:
     branches: [master]
+  pull_request:
+    branches: [master]
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,6 +27,8 @@ jobs:
           assert json.loads(pathlib.Path('vercel.json').read_text())['rewrites'], 'deep-link rewrite missing'
           PY
           node --check /tmp/compass-inline.js
+      - name: Test ATS failure isolation and freshness
+        run: node --test tests/jobs-feed.test.mjs
       - name: Install isolated Chromium test harness
         run: |
           npm install --no-save playwright@1.56.1
