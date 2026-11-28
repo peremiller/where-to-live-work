@@ -35,7 +35,9 @@ async function fetchGreenhouse(token, match) {
   });
   if (!r.ok) throw new Error(`greenhouse ${token} ${r.status}`);
   const data = await r.json();
-  if (!Array.isArray(data?.jobs)) throw new Error("Invalid ATS jobs response");
+  if (!Array.isArray(data?.jobs) || data.jobs.some(j => !j || typeof j !== "object" || Array.isArray(j) || typeof j.title !== "string" || !j.title.trim())) {
+    throw new Error("Invalid ATS jobs response");
+  }
   return data.jobs
     .filter((j) => match.test(j.title || ""))
     .map((j) => ({ title: (j.title || "").trim(), location: (j.location && j.location.name) || "", url: safePostingUrl(j.absolute_url) }))
@@ -50,7 +52,9 @@ async function fetchAshby(org, match) {
   });
   if (!r.ok) throw new Error(`ashby ${org} ${r.status}`);
   const data = await r.json();
-  if (!Array.isArray(data?.jobs)) throw new Error("Invalid ATS jobs response");
+  if (!Array.isArray(data?.jobs) || data.jobs.some(j => !j || typeof j !== "object" || Array.isArray(j) || typeof j.title !== "string" || !j.title.trim())) {
+    throw new Error("Invalid ATS jobs response");
+  }
   return data.jobs
     .filter((j) => j.isListed !== false && match.test(j.title || ""))
     .map((j) => ({
