@@ -152,3 +152,19 @@ test('malformed successful ATS payloads cannot erase previous verified links', a
   assert.equal(allMalformed.partial, true);
   assert.deepEqual(allMalformed.companies, []);
 });
+
+
+test('malformed individual ATS entries cannot silently clear saved employer links', async () => {
+  const valid = { title: 'Program Manager', absolute_url: 'https://jobs.example.org/42', applyUrl: 'https://jobs.example.org/42' };
+  for (const provider of ['/gitlab/', 'ashbyhq.com']) {
+    const company = provider === '/gitlab/' ? 'GitLab' : 'Zapier';
+    for (const malformed of [null, {}, [], { title: 42 }, { title: '   ' }]) {
+      const result = await callApi(async url => String(url).includes(provider)
+        ? { ok: true, json: async () => ({ jobs: [valid, malformed] }) }
+        : emptySuccess());
+      assert.equal(result.partial, true);
+      assert.deepEqual(result.failedCompanies, [company]);
+      assert.equal(result.companies.some(c => c.company === company), false);
+    }
+  }
+});
